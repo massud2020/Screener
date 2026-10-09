@@ -27,4 +27,23 @@ let side=null;if(L&&m15L&&h1L)side="LONG";if(Sh&&m15S&&h1S)side="SHORT";
 let sl=null;if(side){const sz=m5[m5.length-1].high-m5[m5.length-1].low;let d=pb?Math.abs(sc-(side==="LONG"?bl.swing:bs.swing)):sz*2;if(d<=0)d=sz*2;if(d>0)sl=side==="LONG"?sc-d:sc+d}
 let fail=null;if(!side){fail=(!ab&&!be)?"قیمت روی EMA200":!slope?"شیب EMA":pb&&!bl.ok&&!bs.ok?"پولبک EMA":!pb&&!nc?"تقاطع EMA21/50":!pb&&!pl.ok&&!ps.ok?"الگوی ۳+۱":(L?!m15L:Sh?!m15S:!m15L&&!m15S)?"فیلتر M15":"فیلتر H1"}
 return row({side,rsi:r,atr:a,entry:side?sc:null,sl,fail,ef,em,es})}
-if(typeof module!=="undefined")module.exports={evaluate,ema,rsi,atr,resample,checkPattern,checkPullback};
+
+function lci(b,sec,asOf){let lo=0,hi=b.length-1,a=-1;while(lo<=hi){const m=(lo+hi)>>1;if(b[m].time+sec<=asOf){a=m;lo=m+1}else hi=m-1}return a}
+function divExit(c,rA,from,isLong){const H=[],L=[];for(let i=Math.max(from+2,1);i<c.length-1;i++){const r=rA[i];if(r==null)continue;if(c[i].high>=c[i-1].high&&c[i].high>=c[i+1].high)H.push({i,p:c[i].high,r});if(c[i].low<=c[i-1].low&&c[i].low<=c[i+1].low)L.push({i,p:c[i].low,r})}
+const A=isLong?H:L;for(let k=1;k<A.length;k++){const a=A[k-1],b=A[k];if(a.i<=from)continue;if(isLong?(b.p>a.p&&b.r<a.r):(b.p<a.p&&b.r>a.r))return{i:b.i,p:c[b.i].close}}return null}
+function marks(raw5,rawH1,S,now=Date.now()/1000){S={...DEF,...S};const m5=dropForming(raw5,300,now),h1=dropForming(rawH1,3600,now);if(m5.length<S.es+4)return[];
+const cl=m5.map(c=>c.close),efA=ema(cl,S.ef),emA=ema(cl,S.em),esA=ema(cl,S.es),rA=rsi(cl,S.rsiP),aA=atr(m5,S.atrP),pb=S.mode==="pullback";
+const m15=S.m15?resample(m5,15):[],mc=m15.map(c=>c.close),mf=S.m15?ema(mc,S.ef):[],mm=S.m15?ema(mc,S.em):[];
+const hc=h1.map(c=>c.close),hf=S.h1?ema(hc,S.ef):[],hm=S.h1?ema(hc,S.em):[],hs=S.h1?ema(hc,S.es):[];const out=[];
+for(let i=Math.max(m5.length-180,S.es+1,3);i<m5.length;i++){const ef=efA[i],em=emA[i],es=esA[i],efp=efA[i-1],emp=emA[i-1],r=rA[i],a=aA[i];if([ef,em,es,efp,emp,r,a].some(x=>x==null)||a<=0)continue;
+const b=m5[i],l4=[b,m5[i-1],m5[i-2],m5[i-3]],pl=checkPattern(l4,"LONG",S.minRatio),ps=checkPattern(l4,"SHORT",S.minRatio),sl_=m5.slice(0,i+1),efs=efA.slice(0,i+1),bl=checkPullback(sl_,efs,"LONG",S.lookback),bs=checkPullback(sl_,efs,"SHORT",S.lookback);
+const slope=(ef-efp)!==0&&(em-emp)!==0,nc=ef!==em&&efp!==emp&&((ef>em&&efp>emp)||(ef<em&&efp<emp)),ab=b.close>es,be=b.close<es;
+const L=pb?ab&&slope&&bl.ok:ab&&nc&&slope&&pl.ok,Sh=pb?be&&slope&&bs.ok:be&&nc&&slope&&ps.ok;if(!L&&!Sh)continue;
+let m15L=true,m15S=true;if(S.m15){const k=lci(m15,900,b.time+300),f=k>=0?mf[k]:null,m=k>=0?mm[k]:null;if(f==null||m==null)continue;m15L=f>m;m15S=f<m}
+let h1L=true,h1S=true;if(S.h1){const k=lci(h1,3600,b.time+300),s=k>=0?hs[k]:null;if(s==null)continue;const c=h1[k].close;if(S.h1Strict){const f=hf[k],m=hm[k];if(f==null||m==null)continue;h1L=c>s&&f>m&&m>s;h1S=c<s&&f<m&&m<s}else{h1L=c>s;h1S=c<s}}
+let side=null;if(L&&m15L&&h1L)side="LONG";if(Sh&&m15S&&h1S)side="SHORT";if(!side)continue;
+const sz=b.high-b.low;let d=pb?Math.abs(b.close-(side==="LONG"?bl.swing:bs.swing)):sz*2;if(d<=0)d=sz*2;if(d<=0)continue;
+const ex=divExit(m5,rA,i,side==="LONG");if(!ex)continue;out.push({time:b.time,side,entry:b.close,sl:side==="LONG"?b.close-d:b.close+d,tp:ex.p,t2:m5[ex.i].time})}
+return out}
+
+if(typeof module!=="undefined")module.exports={marks,divExit,evaluate,ema,rsi,atr,resample,checkPattern,checkPullback};
