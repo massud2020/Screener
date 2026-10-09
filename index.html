@@ -1,356 +1,55 @@
-<!DOCTYPE html>
-<html lang="fa" dir="rtl">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#123a3a">
-<link rel="manifest" href="manifest.json">
-<link rel="icon" href="icon.svg">
-<link rel="apple-touch-icon" href="icon-192.png">
-<title>اسکرینر بالانس</title>
+<!DOCTYPE html><html lang="fa" dir="rtl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#08090b"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png">
+<title>Balanced Screener</title>
 <style>
-:root{--bg:#eef1ef;--surf:#fff;--ink:#142226;--mute:#6a7b7e;--line:#d9e0de;--long:#0a8a57;--short:#c6392f;--acc:#123a3a;--accink:#fff;--warn:#b7791f;--r:14px}
-@media (prefers-color-scheme:dark){:root{--bg:#0e1819;--surf:#16262a;--ink:#e6eeee;--mute:#8aa0a3;--line:#243a3e;--long:#2fd08c;--short:#ff6b5e;--acc:#1f5c5c;--warn:#e0a84a}}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "Vazirmatn","Segoe UI",Tahoma,system-ui,sans-serif}
-body{padding:env(safe-area-inset-top) 0 calc(72px + env(safe-area-inset-bottom))}
-.n{direction:ltr;unicode-bidi:isolate;font-family:ui-monospace,"SF Mono",Consolas,monospace;font-variant-numeric:tabular-nums}
-header{background:var(--acc);color:var(--accink);padding:14px 16px 12px}
-header h1{margin:0;font-size:18px;font-weight:700}
-header .sub{font-size:12px;opacity:.8;margin-top:2px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.bar{height:3px;background:rgba(255,255,255,.2);margin-top:10px;border-radius:2px;overflow:hidden}
-.bar i{display:block;height:100%;width:0;background:#fff;transition:width .2s}
-main{padding:12px 14px;max-width:720px;margin:0 auto}
-.funnel{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:12px}
-.funnel div{background:var(--surf);border:1px solid var(--line);border-radius:10px;padding:6px 2px;text-align:center}
-.funnel b{display:block;font-size:17px}
-.funnel span{font-size:10.5px;color:var(--mute)}
-.card{background:var(--surf);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;margin-bottom:10px;border-inline-start:5px solid var(--mute)}
-.card.L{border-inline-start-color:var(--long)}.card.S{border-inline-start-color:var(--short)}
-.card .top{display:flex;justify-content:space-between;align-items:center}
-.sym{font-size:17px;font-weight:700}
-.tag{font-size:12px;font-weight:700;padding:2px 10px;border-radius:99px;color:#fff}
-.L .tag{background:var(--long)}.S .tag{background:var(--short)}
-.lv{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
-.lv div{background:var(--bg);border-radius:9px;padding:6px 8px}
-.lv small{display:block;font-size:11px;color:var(--mute)}
-.lv .sl{color:var(--short)}.lv .tp{color:var(--long)}
-.meta{display:flex;justify-content:space-between;margin-top:8px;font-size:12px;color:var(--mute)}
-.empty{text-align:center;color:var(--mute);padding:36px 12px}
-table{width:100%;border-collapse:collapse;background:var(--surf);border-radius:var(--r);overflow:hidden;border:1px solid var(--line);font-size:13px}
-th,td{padding:7px 4px;text-align:center;border-bottom:1px solid var(--line)}
-th{font-size:11px;color:var(--mute);font-weight:600}
-td:first-child,th:first-child{text-align:start;padding-inline-start:10px}
-tr.dim td{opacity:.45}
-.ok{color:var(--long)}.no{color:var(--short);opacity:.7}.na{color:var(--mute)}
-.scroll{overflow-x:auto}
-nav{position:fixed;bottom:0;inset-inline:0;background:var(--surf);border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom)}
-nav button{flex:1;border:0;background:none;color:var(--mute);padding:12px 0;font:inherit;font-weight:600}
-nav button.on{color:var(--acc);box-shadow:inset 0 -3px 0 var(--acc)}
-@media (prefers-color-scheme:dark){nav button.on{color:#7fe3d0;box-shadow:inset 0 -3px 0 #7fe3d0}}
-fieldset{border:1px solid var(--line);border-radius:var(--r);margin:0 0 12px;padding:8px 12px 12px;background:var(--surf)}
-legend{font-weight:700;padding:0 6px}
-.row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:6px 0}
-.row label{flex:1;font-size:14px}
-.row input[type=number]{width:84px;padding:6px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit;text-align:center}
-.row input[type=checkbox]{width:22px;height:22px;accent-color:var(--acc)}
-textarea{width:100%;min-height:70px;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);direction:ltr;font:13px ui-monospace,monospace}
-.btn{display:block;width:100%;padding:12px;border:0;border-radius:12px;background:var(--acc);color:#fff;font:inherit;font-weight:700;margin-top:8px}
-.btn.alt{background:var(--surf);color:var(--ink);border:1px solid var(--line)}
-.hint{font-size:12px;color:var(--mute);margin:4px 0 0}
-.err{color:var(--warn);font-size:12px;margin:0 0 10px}
-.hist{font-size:13px;display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--line)}
-</style>
-</head>
-<body>
-<header>
-  <h1>اسکرینر بالانس · M5</h1>
-  <div class="sub"><span id="st">آماده</span><span class="n" id="clock"></span></div>
-  <div class="bar"><i id="prog"></i></div>
-</header>
-<main id="view"></main>
-<nav>
-  <button data-t="sig" class="on">سیگنال‌ها</button>
-  <button data-t="scan">اسکن</button>
-  <button data-t="log">تاریخچه</button>
-  <button data-t="set">تنظیمات</button>
-</nav>
-
+:root{--bg:#08090b;--card:#111318;--bd:#23262d;--tx:#e8eaed;--mu:#8a8f98;--g:#3f9d6a;--r:#d15a52}
+*{box-sizing:border-box;margin:0}body{background:var(--bg);color:var(--tx);font:15px system-ui,sans-serif;padding:env(safe-area-inset-top) 12px env(safe-area-inset-bottom)}
+header{position:sticky;top:0;background:var(--bg);padding:12px 0 8px;z-index:2}h1{font-size:18px}
+.bar{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}button,select{background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:10px;padding:9px 12px;font:inherit}
+button.p{background:var(--g);border-color:var(--g);color:#fff}.st{color:var(--mu);font-size:12px;margin-top:6px}
+.set{display:none;background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:10px;margin-top:8px}.set.on{display:block}
+.set label{display:flex;justify-content:space-between;align-items:center;padding:6px 0}
+.row{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:10px 12px;margin:8px 0}
+.top{display:flex;justify-content:space-between;align-items:center}.sym{font-weight:600;direction:ltr}
+.b{padding:2px 10px;border-radius:99px;font-size:12px;font-weight:700}.LONG{background:var(--g)}.SHORT{background:var(--r)}.NONE{background:var(--bd);color:var(--mu)}
+.d{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;margin-top:8px;font-size:13px;direction:ltr;color:var(--mu)}.d b{color:var(--tx);font-weight:500}
+.f{color:var(--mu);font-size:12px;margin-top:4px}
+</style></head><body>
+<header><h1>Balanced Screener</h1>
+<div class="bar"><button class="p" id="go">اسکن</button><select id="mode"><option value="pullback">پولبک EMA</option><option value="pattern">الگوی ۳+۱</option></select><button id="gs">تنظیمات</button></div>
+<div class="set" id="set"><label>فیلتر M15<input type="checkbox" id="m15" checked></label><label>فیلتر H1<input type="checkbox" id="h1" checked></label><label>H1 سخت‌گیرانه<input type="checkbox" id="h1s"></label><label>فقط سیگنال‌دارها<input type="checkbox" id="only"></label><label>OANDA توکن<input type="password" id="tok" placeholder="API token" style="width:55%;direction:ltr;background:var(--bg);color:var(--tx);border:1px solid var(--bd);border-radius:8px;padding:6px"></label><label>نوع حساب OANDA<select id="env"><option value="practice">Practice</option><option value="live">Live</option></select></label><label>سهام اضافه<input id="ex" placeholder="مثلاً SHOP, UBER" style="width:55%;direction:ltr;background:var(--bg);color:var(--tx);border:1px solid var(--bd);border-radius:8px;padding:6px"></label><label>اسکن خودکار (۶۰ثانیه)<input type="checkbox" id="auto"></label></div>
+<div class="st" id="st">آماده</div></header>
+<main id="list"></main>
+<script src="engine.js"></script>
 <script>
-"use strict";
-/* ============ تنظیمات (معادل inputهای فایل MQ5) ============ */
-const DEF={
-  emaF:21,emaM:50,emaS:200,rsiP:14,rsiLong:40,rsiShort:60,
-  minRatio:0.40,useBody:false,reqLast:true,
-  useSep:true,minSep:0.05,useSlope:true,bothSlope:true,atrP:14,
-  useM15:true,useH1:true,h1Strict:false,
-  slMult:1.5,rr:2.5,scanSec:60,notify:true,sound:true,
-  forex:"EURUSD,GBPUSD,USDJPY,USDCHF,USDCAD,AUDUSD,NZDUSD,EURGBP,EURJPY,GBPJPY,AUDJPY,EURAUD,EURCAD,EURCHF,GBPAUD,GBPCAD,GBPCHF,AUDCAD,AUDNZD,CADJPY,CHFJPY,NZDJPY,XAUUSD",
-  crypto:"BTCUSDT,ETHUSDT,BNBUSDT,SOLUSDT,XRPUSDT,ADAUSDT,DOGEUSDT,AVAXUSDT,LINKUSDT,DOTUSDT,LTCUSDT,TRXUSDT,MATICUSDT,ATOMUSDT,NEARUSDT"
-};
-const SCHEMA=[
- ["EMA و RSI (M5)",[["emaF","EMA سریع"],["emaM","EMA میانی"],["emaS","EMA کند"],["rsiP","دوره RSI"],["rsiLong","حداقل RSI برای LONG"],["rsiShort","حداکثر RSI برای SHORT"]]],
- ["الگوی کندل ۳+۱",[["minRatio","حداقل نسبت اندازه (کندل تکی ÷ مجموع سه‌تایی)",0.05],["useBody","اندازه با بدنه (نه سایه تا سایه)"],["reqLast","کندل تکی باید آخرین کندل باشد"]]],
- ["فاصله و شیب EMA",[["useSep","فیلتر فاصله EMA سریع و میانی"],["minSep","حداقل فاصله (ضریب ATR)",0.01],["useSlope","فیلتر شیب EMA"],["bothSlope","هر دو شیب هم‌جهت و سریع‌تر تندتر"],["atrP","دوره ATR"]]],
- ["فیلتر چندزمانه",[["useM15","فیلتر M15 (EMA سریع در برابر میانی)"],["useH1","فیلتر H1 (قیمت در برابر EMA کند)"],["h1Strict","H1 سخت‌گیرانه"]]],
- ["ورود / خروج",[["slMult","ضریب ATR برای حد ضرر",0.1],["rr","نسبت ریسک به ریوارد",0.1]]],
- ["اسکن و هشدار",[["scanSec","فاصله اسکن (ثانیه)"],["notify","اعلان سیستم"],["sound","صدا و لرزش"]]]
-];
-let S=Object.assign({},DEF,JSON.parse(localStorage.getItem("bal_s")||"{}"));
-const save=()=>localStorage.setItem("bal_s",JSON.stringify(S));
-
-/* ============ دریافت داده ============ */
-const BIN=["https://data-api.binance.vision","https://api.binance.com"];
-const IV={"5m":"5m","15m":"15m","1h":"1h"};
-const TTL={"5m":20e3,"15m":120e3,"1h":300e3};
-const cache=new Map();
-async function getJSON(u,ms=12000){
-  const ac=new AbortController(),t=setTimeout(()=>ac.abort(),ms);
-  try{const r=await fetch(u,{signal:ac.signal});if(!r.ok)throw new Error("HTTP "+r.status);return await r.json();}
-  finally{clearTimeout(t);}
-}
-async function binBars(sym,iv,limit){
-  let e;
-  for(const b of BIN){
-    try{const a=await getJSON(`${b}/api/v3/klines?symbol=${sym}&interval=${iv}&limit=${limit}`);
-      return a.map((k,i)=>({t:k[0],o:+k[1],h:+k[2],l:+k[3],c:+k[4],open:i===a.length-1}));}
-    catch(x){e=x;}
-  }
-  throw e;
-}
-async function bqBars(sym,iv,limit){
-  const d=await getJSON(`https://biquote.io/api/${sym}/ohlc?interval=${iv}&limit=${limit}`);
-  return d.bars.map(b=>({t:Date.parse(b.openTime),o:b.open,h:b.high,l:b.low,c:b.close,open:!!b.isOpen})).sort((a,b)=>a.t-b.t);
-}
-async function bars(sym,crypto,iv,limit){
-  const k=sym+"|"+iv,c=cache.get(k);
-  if(c&&Date.now()-c.ts<TTL[iv])return c.v;
-  let v;
-  if(crypto){
-    try{v=await binBars(sym,IV[iv],limit);}
-    catch(e){v=await bqBars(sym.replace(/USDT$/,"USD"),iv,limit);}
-  }else v=await bqBars(sym,iv,limit);
-  cache.set(k,{ts:Date.now(),v});
-  return v;
-}
-
-/* ============ اندیکاتورها (هم‌رفتار با MT5) ============ */
-function ema(v,p){const k=2/(p+1),o=new Array(v.length);o[0]=v[0];for(let i=1;i<v.length;i++)o[i]=v[i]*k+o[i-1]*(1-k);return o;}
-function rsiLast(c,p){
-  if(c.length<=p)return NaN;
-  let g=0,l=0;
-  for(let i=1;i<=p;i++){const d=c[i]-c[i-1];d>0?g+=d:l-=d;}
-  g/=p;l/=p;
-  for(let i=p+1;i<c.length;i++){const d=c[i]-c[i-1];g=(g*(p-1)+(d>0?d:0))/p;l=(l*(p-1)+(d<0?-d:0))/p;}
-  return l===0?100:100-100/(1+g/l);
-}
-function atrLast(b,p){ // iATR در MT5 = میانگین ساده TR
-  let s=0;
-  for(let i=b.length-p;i<b.length;i++){const pc=b[i-1].c;s+=Math.max(b[i].h-b[i].l,Math.abs(b[i].h-pc),Math.abs(b[i].l-pc));}
-  return s/p;
-}
-const csize=b=>S.useBody?Math.abs(b.c-b.o):(b.h-b.l);
-function pattern(r,dir){ // r[0] = آخرین کندل بسته‌شده
-  let g=0,rd=0,gs=0,rs=0;
-  for(const b of r){const z=csize(b);if(b.c>b.o){g++;gs+=z;}else if(b.c<b.o){rd++;rs+=z;}else return false;}
-  if(dir==="L"){
-    if(g!==1||rd!==3)return false;
-    if(S.reqLast&&!(r[0].c>r[0].o))return false;
-    return rs>0&&gs/rs>=S.minRatio;
-  }
-  if(rd!==1||g!==3)return false;
-  if(S.reqLast&&!(r[0].c<r[0].o))return false;
-  return gs>0&&rs/gs>=S.minRatio;
-}
-function slopeOK(f,fp,m,mp,long){
-  if(!S.useSlope)return true;
-  const a=f-fp,b=m-mp;
-  if(long)return S.bothSlope?(a>0&&b>0&&a>b):(a>b&&a>0);
-  return S.bothSlope?(a<0&&b<0&&a<b):(a<b&&a<0);
-}
-
-/* ============ تحلیل یک نماد ============ */
-async function analyze(sym,crypto){
-  const need=Math.max(S.emaS+60,260);
-  const m5all=await bars(sym,crypto,"5m",Math.min(need+50,1000));
-  const price=m5all[m5all.length-1].c;
-  const m5=m5all.filter(b=>!b.open);
-  if(m5.length<S.emaS+5)throw new Error("داده ناکافی");
-  const n=m5.length,lastT=m5[n-1].t;
-  if(!crypto&&Date.now()-lastT>25*60e3)return{sym,crypto,closed:true};
-  const c=m5.map(b=>b.c),ef=ema(c,S.emaF),em=ema(c,S.emaM),es=ema(c,S.emaS);
-  const i=n-1,F=ef[i],M=em[i],Sl=es[i];
-  const atr=atrLast(m5,S.atrP),rsi=rsiLast(c,S.rsiP);
-  const longEMA=F>M&&M>Sl,shortEMA=F<M&&M<Sl;
-  const sepOK=!S.useSep||(atr>0&&Math.abs(F-M)>=S.minSep*atr);
-  const slopeL=slopeOK(F,ef[i-1],M,em[i-1],true),slopeS=slopeOK(F,ef[i-1],M,em[i-1],false);
-  const rec=[m5[n-1],m5[n-2],m5[n-3],m5[n-4]];
-  const patL=pattern(rec,"L"),patS=pattern(rec,"S");
-  let m15L=true,m15S=true,h1L=true,h1S=true;
-  if(S.useM15){
-    const b=(await bars(sym,crypto,"15m",300)).filter(x=>!x.open),cc=b.map(x=>x.c);
-    const f=ema(cc,S.emaF),m=ema(cc,S.emaM),k=cc.length-1;
-    m15L=f[k]>m[k];m15S=f[k]<m[k];
-  }
-  if(S.useH1){
-    const b=(await bars(sym,crypto,"1h",Math.min(S.emaS+100,1000))).filter(x=>!x.open),cc=b.map(x=>x.c),k=cc.length-1;
-    const s=ema(cc,S.emaS)[k],cl=cc[k];
-    if(S.h1Strict){
-      const f=ema(cc,S.emaF)[k],m=ema(cc,S.emaM)[k];
-      h1L=cl>s&&f>m&&m>s;h1S=cl<s&&f<m&&m<s;
-    }else{h1L=cl>s;h1S=cl<s;}
-  }
-  const rsiL=rsi>S.rsiLong,rsiS=rsi<S.rsiShort;
-  const sigL=longEMA&&sepOK&&slopeL&&rsiL&&patL&&m15L&&h1L;
-  const sigS=shortEMA&&sepOK&&slopeS&&rsiS&&patS&&m15S&&h1S;
-  const side=sigL?"L":sigS?"S":null;
-  let lv=null;
-  if(side){
-    const d=atr*S.slMult;
-    lv=side==="L"?{entry:price,sl:price-d,tp:price+d*S.rr}:{entry:price,sl:price+d,tp:price-d*S.rr};
-  }
-  const dirL=longEMA,dirS=shortEMA;
-  const chk=(dirL||dirS)?(dirL?
-    {ema:true,sep:sepOK,slope:slopeL,rsi:rsiL,pat:patL,m15:m15L,h1:h1L}:
-    {ema:true,sep:sepOK,slope:slopeS,rsi:rsiS,pat:patS,m15:m15S,h1:h1S}):null;
-  return{sym,crypto,price,rsi,atr,side,lv,bar:lastT,chk,dir:dirL?"L":dirS?"S":null,
-         pat:patL||patS,ema:longEMA||shortEMA,sep:(longEMA||shortEMA)&&sepOK};
-}
-
-/* ============ اسکن ============ */
-let results=[],errors=[],scanning=false,lastScan=null,seen=new Set(JSON.parse(sessionStorage.getItem("bal_seen")||"[]"));
-let hist=JSON.parse(localStorage.getItem("bal_h")||"[]");
-const list=()=>[
-  ...S.forex.split(",").map(s=>s.trim().toUpperCase()).filter(Boolean).map(s=>[s,false]),
-  ...S.crypto.split(",").map(s=>s.trim().toUpperCase()).filter(Boolean).map(s=>[s,true])
-];
-async function scanAll(){
-  if(scanning)return;
-  scanning=true;
-  const L=list(),out=[],errs=[];
-  let done=0;const q=L.slice();
-  setStatus("در حال اسکن…");
-  const worker=async()=>{
-    while(q.length){
-      const [s,c]=q.shift();
-      try{out.push(await analyze(s,c));}catch(e){errs.push(s);}
-      done++;document.getElementById("prog").style.width=(done/L.length*100)+"%";
-    }
-  };
-  await Promise.all(Array.from({length:6},worker));
-  results=out;errors=errs;lastScan=new Date();scanning=false;
-  document.getElementById("prog").style.width="0";
-  setStatus(`آخرین اسکن ${lastScan.toLocaleTimeString("fa-IR")}`);
-  fire();render();
-}
-function fire(){
-  const fresh=results.filter(r=>r.side&&!seen.has(r.sym+r.side+r.bar));
-  for(const r of fresh){
-    seen.add(r.sym+r.side+r.bar);
-    hist.unshift({sym:r.sym,side:r.side,at:Date.now(),...r.lv});
-  }
-  hist=hist.slice(0,80);
-  localStorage.setItem("bal_h",JSON.stringify(hist));
-  sessionStorage.setItem("bal_seen",JSON.stringify([...seen].slice(-400)));
-  if(!fresh.length)return;
-  const body=fresh.map(r=>`${r.sym} ${r.side==="L"?"LONG":"SHORT"}`).join(" · ");
-  if(S.sound){beep();navigator.vibrate&&navigator.vibrate([200,100,200]);}
-  if(S.notify&&"Notification" in window&&Notification.permission==="granted"){
-    navigator.serviceWorker.ready.then(g=>g.showNotification("سیگنال جدید",{body,tag:"bal",icon:"icon-192.png"})).catch(()=>new Notification("سیگنال جدید",{body}));
-  }
-}
-let AC;
-function beep(){
-  try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();
-    const o=AC.createOscillator(),g=AC.createGain();o.connect(g);g.connect(AC.destination);
-    o.frequency.value=880;g.gain.setValueAtTime(.2,AC.currentTime);g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+.5);
-    o.start();o.stop(AC.currentTime+.5);}catch(e){}
-}
-let timer;
-function schedule(){clearInterval(timer);timer=setInterval(()=>{if(!document.hidden)scanAll();},Math.max(15,S.scanSec)*1000);}
-document.addEventListener("visibilitychange",()=>{if(!document.hidden&&(!lastScan||Date.now()-lastScan>S.scanSec*1000))scanAll();});
-
-/* ============ نمایش ============ */
-const view=document.getElementById("view");
-let tab="sig";
-function setStatus(t){document.getElementById("st").textContent=t;}
-function fmt(p){
-  if(p==null||isNaN(p))return "—";
-  const a=Math.abs(p);
-  return p.toFixed(a>=1000?2:a>=100?3:a>=10?4:a>=1?5:a>=.01?6:8);
-}
-const dot=(v)=>v==null?'<span class="na">–</span>':v?'<span class="ok">●</span>':'<span class="no">○</span>';
-function render(){
-  document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.t===tab));
-  if(tab==="sig")return renderSig();
-  if(tab==="scan")return renderScan();
-  if(tab==="log")return renderLog();
-  renderSet();
-}
-function renderSig(){
-  const act=results.filter(r=>r.side),tot=results.filter(r=>!r.closed);
-  const f=[["نماد",tot.length],["EMA",tot.filter(r=>r.ema).length],["فاصله",tot.filter(r=>r.sep).length],["الگو",tot.filter(r=>r.pat).length],["سیگنال",act.length]];
-  let h=`<div class="funnel">${f.map(x=>`<div><b class="n">${x[1]}</b><span>${x[0]}</span></div>`).join("")}</div>`;
-  if(errors.length)h+=`<p class="err">خطا در دریافت داده: <span class="n">${errors.slice(0,8).join(", ")}</span>${errors.length>8?" …":""}</p>`;
-  if(!act.length)h+=`<div class="empty">${lastScan?"فعلاً سیگنال فعالی نیست.":"در حال دریافت داده…"}</div>`;
-  for(const r of act){
-    const L=r.side==="L";
-    h+=`<div class="card ${r.side}"><div class="top"><span class="sym n">${r.sym}</span><span class="tag">${L?"LONG":"SHORT"}</span></div>
-    <div class="lv"><div><small>ورود</small><b class="n">${fmt(r.lv.entry)}</b></div><div class="sl"><small>حد ضرر</small><b class="n">${fmt(r.lv.sl)}</b></div><div class="tp"><small>تارگت</small><b class="n">${fmt(r.lv.tp)}</b></div></div>
-    <div class="meta"><span>RSI <span class="n">${r.rsi.toFixed(0)}</span></span><span>${r.crypto?"کریپتو":"فارکس"}</span><span class="n">${new Date(r.bar+3e5).toLocaleTimeString("fa-IR",{hour:"2-digit",minute:"2-digit"})}</span></div></div>`;
-  }
-  view.innerHTML=h;
-}
-function renderScan(){
-  if(!results.length){view.innerHTML='<div class="empty">هنوز اسکنی انجام نشده.</div>';return;}
-  const rows=[...results].sort((a,b)=>score(b)-score(a)).map(r=>{
-    if(r.closed)return `<tr class="dim"><td class="n">${r.sym}</td><td colspan="7">بازار بسته</td></tr>`;
-    const c=r.chk;
-    return `<tr class="${c?"":"dim"}"><td class="n">${r.sym}</td><td>${r.dir?(r.dir==="L"?'<b class="ok">L</b>':'<b class="no">S</b>'):'<span class="na">–</span>'}</td>
-    ${["ema","sep","slope","rsi","pat","m15","h1"].map(k=>`<td>${dot(c?c[k]:null)}</td>`).join("")}</tr>`;
-  }).join("");
-  view.innerHTML=`<div class="scroll"><table><thead><tr><th>نماد</th><th>سمت</th><th>EMA</th><th>فاصله</th><th>شیب</th><th>RSI</th><th>الگو</th><th>M15</th><th>H1</th></tr></thead><tbody>${rows}</tbody></table></div>
-  <p class="hint">● شرط برقرار · ○ ناقص. فقط نمادهایی که ساختار EMA دارند پررنگ‌اند. سیگنال یعنی همه ستون‌های فعال برقرار باشند.</p>`;
-}
-const score=r=>r.closed?-1:r.side?100:(r.chk?Object.values(r.chk).filter(Boolean).length:0);
-function renderLog(){
-  view.innerHTML=hist.length?`<div>${hist.map(x=>`<div class="hist"><span><b class="n">${x.sym}</b> <span class="${x.side==="L"?"ok":"no"}">${x.side==="L"?"LONG":"SHORT"}</span></span><span class="n">${fmt(x.entry)} / ${fmt(x.sl)} / ${fmt(x.tp)}</span></div>`).join("")}</div><button class="btn alt" id="clr">پاک کردن تاریخچه</button>`:'<div class="empty">تاریخچه خالی است.</div>';
-  const b=document.getElementById("clr");
-  if(b)b.onclick=()=>{hist=[];localStorage.setItem("bal_h","[]");render();};
-}
-function renderSet(){
-  let h="";
-  for(const [t,items] of SCHEMA){
-    h+=`<fieldset><legend>${t}</legend>`;
-    for(const [k,l,step] of items){
-      const bool=typeof DEF[k]==="boolean";
-      h+=`<div class="row"><label for="f_${k}">${l}</label>${bool?`<input type="checkbox" id="f_${k}" ${S[k]?"checked":""}>`:`<input type="number" inputmode="decimal" step="${step||1}" id="f_${k}" value="${S[k]}">`}</div>`;
-    }
-    h+="</fieldset>";
-  }
-  h+=`<fieldset><legend>نمادها</legend><p class="hint">فارکس (از biquote.io)</p><textarea id="f_forex">${S.forex}</textarea><p class="hint">کریپتو (از Binance، جفت USDT)</p><textarea id="f_crypto">${S.crypto}</textarea></fieldset>
-  <button class="btn" id="sv">ذخیره و اسکن مجدد</button>
-  <button class="btn alt" id="nt">فعال‌سازی اعلان‌ها</button>
-  <button class="btn alt" id="rs">بازگشت به پیش‌فرض</button>
-  <p class="hint">برای کار کردن اسکن خودکار و هشدار، برنامه باید باز و در پیش‌زمینه باشد.</p>`;
-  view.innerHTML=h;
-  document.getElementById("sv").onclick=()=>{
-    for(const k of Object.keys(DEF)){
-      const e=document.getElementById("f_"+k);if(!e)continue;
-      S[k]=typeof DEF[k]==="boolean"?e.checked:typeof DEF[k]==="number"?(parseFloat(e.value)||DEF[k]):e.value;
-    }
-    save();cache.clear();schedule();tab="sig";render();scanAll();
-  };
-  document.getElementById("nt").onclick=async()=>{
-    beep();
-    if("Notification" in window){const p=await Notification.requestPermission();setStatus(p==="granted"?"اعلان‌ها فعال شد":"اجازه اعلان داده نشد");}
-  };
-  document.getElementById("rs").onclick=()=>{if(confirm("همه تنظیمات به پیش‌فرض برگردد؟")){S=Object.assign({},DEF);save();render();}};
-}
-document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{tab=b.dataset.t;render();window.scrollTo(0,0);});
-setInterval(()=>{document.getElementById("clock").textContent=new Date().toLocaleTimeString("fa-IR");},1000);
-if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
-render();schedule();scanAll();
-</script>
-</body>
-</html>
+const U=[["BTCUSDT","BTC-USDT","BTC-USD",2],["ETHUSDT","ETH-USDT","ETH-USD",2],["SOLUSDT","SOL-USDT","SOL-USD",3],["XRPUSDT","XRP-USDT","XRP-USD",5],["BNBUSDT","BNB-USDT","BNB-USD",2],["ADAUSDT","ADA-USDT","ADA-USD",5],["DOGEUSDT","DOGE-USDT","DOGE-USD",6],["AVAXUSDT","AVAX-USDT","AVAX-USD",4],["LINKUSDT","LINK-USDT","LINK-USD",4],["LTCUSDT","LTC-USDT","LTC-USD",3],["SUIUSDT","SUI-USDT","SUI-USD",5],["DOTUSDT","DOT-USDT","DOT-USD",4],
+["EURUSD",0,"EURUSD=X",5,"EUR_USD"],["GBPUSD",0,"GBPUSD=X",5,"GBP_USD"],["USDJPY",0,"USDJPY=X",3,"USD_JPY"],["AUDUSD",0,"AUDUSD=X",5,"AUD_USD"],["USDCAD",0,"USDCAD=X",5,"USD_CAD"],["USDCHF",0,"USDCHF=X",5,"USD_CHF"],["NZDUSD",0,"NZDUSD=X",5,"NZD_USD"],["EURJPY",0,"EURJPY=X",3,"EUR_JPY"],["EURGBP",0,"EURGBP=X",5,"EUR_GBP"],["EURAUD",0,"EURAUD=X",5,"EUR_AUD"],["EURNZD",0,"EURNZD=X",5,"EUR_NZD"],["EURCAD",0,"EURCAD=X",5,"EUR_CAD"],["EURCHF",0,"EURCHF=X",5,"EUR_CHF"],["GBPJPY",0,"GBPJPY=X",3,"GBP_JPY"],["GBPAUD",0,"GBPAUD=X",5,"GBP_AUD"],["GBPNZD",0,"GBPNZD=X",5,"GBP_NZD"],["GBPCAD",0,"GBPCAD=X",5,"GBP_CAD"],["GBPCHF",0,"GBPCHF=X",5,"GBP_CHF"],["AUDJPY",0,"AUDJPY=X",3,"AUD_JPY"],["AUDNZD",0,"AUDNZD=X",5,"AUD_NZD"],["AUDCAD",0,"AUDCAD=X",5,"AUD_CAD"],["AUDCHF",0,"AUDCHF=X",5,"AUD_CHF"],["NZDJPY",0,"NZDJPY=X",3,"NZD_JPY"],["NZDCAD",0,"NZDCAD=X",5,"NZD_CAD"],["NZDCHF",0,"NZDCHF=X",5,"NZD_CHF"],["CADJPY",0,"CADJPY=X",3,"CAD_JPY"],["CADCHF",0,"CADCHF=X",5,"CAD_CHF"],["CHFJPY",0,"CHFJPY=X",3,"CHF_JPY"],
+["XAUUSD",0,"GC=F",2,"XAU_USD"],["XAGUSD",0,"SI=F",4,"XAG_USD"],["XCUUSD",0,"HG=F",4,"XCU_USD"],["WTICO",0,"CL=F",3,"WTICO_USD"],["BRENT",0,"BZ=F",3,"BCO_USD"],["NATGAS",0,"NG=F",3,"NATGAS_USD"],["CORN",0,0,3,"CORN_USD"],["WHEAT",0,0,3,"WHEAT_USD"],["SOYBEAN",0,0,3,"SOYBN_USD"],["SUGAR",0,0,5,"SUGAR_USD"],["SPX500",0,"^GSPC",1,"SPX500_USD"],["NAS100",0,"^NDX",1,"NAS100_USD"],["US30",0,"^DJI",1,"US30_USD"],["US2000",0,"^RUT",1,"US2000_USD"],["DE30",0,"^GDAXI",1,"DE30_EUR"],["UK100",0,"^FTSE",1,"UK100_GBP"],["FR40",0,"^FCHI",1,"FR40_EUR"],["EU50",0,"^STOXX50E",1,"EU50_EUR"],["JP225",0,"^N225",1,"JP225_USD"],["HK33",0,"^HSI",1,"HK33_HKD"],["AU200",0,"^AXJO",1,"AU200_AUD"],["AAPL",0,"AAPL",2,0],["MSFT",0,"MSFT",2,0],["NVDA",0,"NVDA",2,0],["GOOGL",0,"GOOGL",2,0],["AMZN",0,"AMZN",2,0],["META",0,"META",2,0],["TSLA",0,"TSLA",2,0],["AMD",0,"AMD",2,0],["NFLX",0,"NFLX",2,0],["AVGO",0,"AVGO",2,0],["JPM",0,"JPM",2,0],["V",0,"V",2,0],["COIN",0,"COIN",2,0],["PLTR",0,"PLTR",2,0]];
+const $=i=>document.getElementById(i);let timer=null,busy=false;
+const PROX=[u=>u,u=>"https://corsproxy.io/?url="+encodeURIComponent(u),u=>"https://api.allorigins.win/raw?url="+encodeURIComponent(u)];
+async function J(url,prox){let e;for(const p of prox?PROX:[PROX[0]]){try{const r=await fetch(p(url),{signal:AbortSignal.timeout(12000)});if(r.ok)return await r.json()}catch(x){e=x}}throw e||new Error("fetch")}
+async function okx(id,bar){const j=await J(`https://www.okx.com/api/v5/market/candles?instId=${id}&bar=${bar}&limit=300`,false);if(j.code!=="0")return[];return j.data.map(r=>({time:+r[0]/1000,open:+r[1],high:+r[2],low:+r[3],close:+r[4]})).sort((a,b)=>a.time-b.time)}
+async function yh(s,iv,rg){const j=await J(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(s)}?interval=${iv}&range=${rg}&includePrePost=false`,true);const r=j.chart.result[0],q=r.indicators.quote[0],o=[];(r.timestamp||[]).forEach((t,i)=>{if(q.open[i]!=null&&q.high[i]!=null&&q.low[i]!=null&&q.close[i]!=null)o.push({time:t,open:q.open[i],high:q.high[i],low:q.low[i],close:q.close[i]})});return o}
+async function oanda(inst,g){const t=localStorage.getItem("bs_tok"),h=localStorage.getItem("bs_env")==="live"?"api-fxtrade":"api-fxpractice";const r=await fetch(`https://${h}.oanda.com/v3/instruments/${inst}/candles?granularity=${g}&count=300&price=M`,{headers:{Authorization:"Bearer "+t},signal:AbortSignal.timeout(12000)});if(!r.ok)throw new Error("OANDA "+r.status);const j=await r.json();return j.candles.map(c=>({time:Date.parse(c.time)/1000,open:+c.mid.o,high:+c.mid.h,low:+c.mid.l,close:+c.mid.c})).filter(c=>isFinite(c.close))}
+async function load(u){let a=[],h=[];
+if(u[1]){try{[a,h]=await Promise.all([okx(u[1],"5m"),okx(u[1],"1H")])}catch(e){}}
+else if(u[4]&&localStorage.getItem("bs_tok")){try{[a,h]=await Promise.all([oanda(u[4],"M5"),oanda(u[4],"H1")])}catch(e){}}
+if((a.length<210||h.length<210)&&u[2]){const[x,y]=await Promise.all([yh(u[2],"5m","5d"),yh(u[2],"1h","6mo")]);if(x.length>a.length)a=x;if(y.length>h.length)h=y}return[a,h]}
+function S(){return{mode:$("mode").value,m15:$("m15").checked,h1:$("h1").checked,h1Strict:$("h1s").checked}}
+async function scan(){if(busy)return;busy=true;$("go").disabled=true;$("st").textContent="در حال اسکن…";const L=U.concat((localStorage.getItem("bs_ex")||"").split(/[ ,]+/).filter(Boolean).map(t=>[t.toUpperCase(),0,t.toUpperCase(),2,0]));const rows=[],errs=[];let i=0;
+await Promise.all(Array.from({length:5},async()=>{while(i<L.length){const u=L[i++];try{const[a,h]=await load(u);if(a.length<50)throw 0;const r=evaluate(u[0],a,h,S());r.d=u[3];rows.push(r)}catch(e){errs.push(u[0])}}}));
+const rk=r=>r.side==="LONG"?0:r.side==="SHORT"?1:2;rows.sort((a,b)=>rk(a)-rk(b)||a.id.localeCompare(b.id));
+const only=$("only").checked,vis=only?rows.filter(r=>r.side):rows,n=rows.filter(r=>r.side).length;
+$("list").innerHTML=vis.map(r=>`<div class="row"><div class="top"><span class="sym">${r.id}</span><span class="b ${r.side||"NONE"}">${r.side||"—"}</span></div>${r.side?`<div class="d"><span>Entry <b>${r.entry.toFixed(r.d)}</b></span><span>SL <b>${r.sl.toFixed(r.d)}</b></span><span>RSI <b>${r.rsi.toFixed(1)}</b></span><span>Exit <b>اولین واگرایی RSI</b></span></div>`:`<div class="f">${r.fail||""}${r.rsi?" · RSI "+r.rsi.toFixed(1):""}</div>`}</div>`).join("")||'<div class="f">نتیجه‌ای نیست</div>';
+$("st").textContent=`${n} سیگنال از ${rows.length} نماد · ${new Date().toLocaleTimeString("fa-IR")}`+(errs.length?` · خطا: ${errs.join(", ")}`:"");
+busy=false;$("go").disabled=false}
+$("go").onclick=scan;$("gs").onclick=()=>$("set").classList.toggle("on");
+["mode","m15","h1","h1s","only"].forEach(i=>$(i).onchange=()=>{localStorage.setItem("bs_"+i,$(i).type==="checkbox"?$(i).checked:$(i).value);scan()});
+$("auto").onchange=()=>{clearInterval(timer);if($("auto").checked)timer=setInterval(scan,60000)};
+$("ex").value=localStorage.getItem("bs_ex")||"";$("ex").onchange=()=>{localStorage.setItem("bs_ex",$("ex").value.trim());scan()};$("tok").value=localStorage.getItem("bs_tok")||"";$("env").value=localStorage.getItem("bs_env")||"practice";
+$("tok").onchange=()=>{localStorage.setItem("bs_tok",$("tok").value.trim());scan()};$("env").onchange=()=>{localStorage.setItem("bs_env",$("env").value);scan()};
+try{["mode","m15","h1","h1s","only"].forEach(i=>{const v=localStorage.getItem("bs_"+i);if(v!=null){$(i).type==="checkbox"?$(i).checked=v==="true":$(i).value=v}})}catch(e){}
+if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
+scan();
+</script></body></html>
