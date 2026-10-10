@@ -21,12 +21,12 @@ const sc=m5[m5.length-1].close,pat=m5.slice(-4).reverse(),pl=checkPattern(pat,"L
 const bl=checkPullback(m5,efA,"LONG",S.lookback),bs=checkPullback(m5,efA,"SHORT",S.lookback);
 const ab=sc>es,be=sc<es,slope=(ef-efp)!==0&&(em-emp)!==0,pb=S.mode==="pullback";
 const nc=ef!==em&&efp!==emp&&((ef>em&&efp>emp)||(ef<em&&efp<emp));
-const L=pb?ab&&slope&&bl.ok:ab&&nc&&slope&&pl.ok,Sh=pb?be&&slope&&bs.ok:be&&nc&&slope&&ps.ok;
+const L=pb?ab&&slope&&bl.ok:ab&&ef>em&&nc&&slope&&pl.ok,Sh=pb?be&&slope&&bs.ok:be&&ef<em&&nc&&slope&&ps.ok;
 let m15L=true,m15S=true;if(S.m15){const m=dropForming(resample(m5,15),900,now);if(m.length<S.em+2)return row({rsi:r,fail:"تاریخچه M15 کافی نیست"});const mc=m.map(c=>c.close),f=last(ema(mc,S.ef)),mm=last(ema(mc,S.em));m15L=f>mm;m15S=f<mm}
 let h1L=true,h1S=true;if(S.h1){if(h1.length<S.es+2)return row({rsi:r,fail:"تاریخچه H1 کافی نیست"});const hc=h1.map(c=>c.close),hs=last(ema(hc,S.es)),c=hc[hc.length-1];if(S.h1Strict){const f=last(ema(hc,S.ef)),m=last(ema(hc,S.em));h1L=c>hs&&f>m&&m>hs;h1S=c<hs&&f<m&&m<hs}else{h1L=c>hs;h1S=c<hs}}
 let side=null;if(L&&m15L&&h1L)side="LONG";if(Sh&&m15S&&h1S)side="SHORT";
 let sl=null;if(side){const sz=m5[m5.length-1].high-m5[m5.length-1].low;let d=pb?Math.abs(sc-(side==="LONG"?bl.swing:bs.swing)):sz*2;if(d<=0)d=sz*2;if(d>0)sl=side==="LONG"?sc-d:sc+d}
-let fail=null;if(!side){fail=(!ab&&!be)?"قیمت روی EMA200":!slope?"شیب EMA":pb&&!bl.ok&&!bs.ok?"پولبک EMA":!pb&&!nc?"تقاطع EMA21/50":!pb&&!pl.ok&&!ps.ok?"الگوی ۳+۱":(L?!m15L:Sh?!m15S:!m15L&&!m15S)?"فیلتر M15":"فیلتر H1"}
+let fail=null;if(!side){fail=(!ab&&!be)?"قیمت روی EMA200":!slope?"شیب EMA":pb&&!bl.ok&&!bs.ok?"پولبک EMA":!pb&&!nc?"تقاطع EMA21/50":!pb&&!((pl.ok&&ef>em)||(ps.ok&&ef<em))?"هم‌راستایی EMA21/50":!pb&&!pl.ok&&!ps.ok?"الگوی ۳+۱":(L?!m15L:Sh?!m15S:!m15L&&!m15S)?"فیلتر M15":"فیلتر H1"}
 return row({side,rsi:r,atr:a,entry:side?sc:null,sl,fail,ef,em,es})}
 
 function lci(b,sec,asOf){let lo=0,hi=b.length-1,a=-1;while(lo<=hi){const m=(lo+hi)>>1;if(b[m].time+sec<=asOf){a=m;lo=m+1}else hi=m-1}return a}
@@ -41,7 +41,7 @@ for(let i=Math.max(m5.length-180,S.es+1,3);i<m5.length;i++){const ef=efA[i],em=e
 if(m5[i].time<=free)continue;
 const b=m5[i],l4=[b,m5[i-1],m5[i-2],m5[i-3]],pl=checkPattern(l4,"LONG",S.minRatio),ps=checkPattern(l4,"SHORT",S.minRatio),sl_=m5.slice(0,i+1),efs=efA.slice(0,i+1),bl=checkPullback(sl_,efs,"LONG",S.lookback),bs=checkPullback(sl_,efs,"SHORT",S.lookback);
 const slope=(ef-efp)!==0&&(em-emp)!==0,nc=ef!==em&&efp!==emp&&((ef>em&&efp>emp)||(ef<em&&efp<emp)),ab=b.close>es,be=b.close<es;
-const L=pb?ab&&slope&&bl.ok:ab&&nc&&slope&&pl.ok,Sh=pb?be&&slope&&bs.ok:be&&nc&&slope&&ps.ok;if(!L&&!Sh)continue;
+const L=pb?ab&&slope&&bl.ok:ab&&ef>em&&nc&&slope&&pl.ok,Sh=pb?be&&slope&&bs.ok:be&&ef<em&&nc&&slope&&ps.ok;if(!L&&!Sh)continue;
 let m15L=true,m15S=true;if(S.m15){const k=lci(m15,900,b.time+300),f=k>=0?mf[k]:null,m=k>=0?mm[k]:null;if(f==null||m==null)continue;m15L=f>m;m15S=f<m}
 let h1L=true,h1S=true;if(S.h1){const k=lci(h1,3600,b.time+300),s=k>=0?hs[k]:null;if(s==null)continue;const c=h1[k].close;if(S.h1Strict){const f=hf[k],m=hm[k];if(f==null||m==null)continue;h1L=c>s&&f>m&&m>s;h1S=c<s&&f<m&&m<s}else{h1L=c>s;h1S=c<s}}
 let side=null;if(L&&m15L&&h1L)side="LONG";if(Sh&&m15S&&h1S)side="SHORT";if(!side)continue;
