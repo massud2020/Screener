@@ -156,6 +156,8 @@ a.btn.tv{border-color:#2962ff;background:#142a66}
   <label><span>OANDA توکن</span><input type="password" id="tok" placeholder="API token" autocomplete="off"></label>
   <label><span>نوع حساب OANDA</span><select id="env"><option value="practice">Practice</option><option value="live">Live</option></select></label>
   <label><span>سهام اضافه<small>تیکرها با کاما</small></span><input id="ex" placeholder="مثلاً SHOP, UBER" autocomplete="off"></label>
+  <h3>برنامه</h3>
+  <label><span>نسخه‌ی اپ<small id="verl"></small></span><button id="upd">پاک‌کردن کش و به‌روزرسانی</button></label>
   <h3>اعلان‌ها</h3>
   <label><span>اعلان سیستمی و صدا</span><button id="nt">فعال‌سازی</button></label>
   <label><span>اعلام صوتی نام نماد</span><input type="checkbox" id="sp" checked></label>
@@ -174,9 +176,9 @@ a.btn.tv{border-color:#2962ff;background:#142a66}
   <div id="cw"><canvas id="cv"></canvas></div>
   <div id="ci"></div>
 </div>
-<script src="symbols.js?v=24"></script><script src="engine.js?v=24"></script><script src="chart.js?v=24"></script>
+<script src="symbols.js?v=25"></script><script src="engine.js?v=25"></script><script src="chart.js?v=25"></script>
 <script>
-const BUILD=24,MISS=[typeof U==="undefined"?"symbols.js":0,typeof evalFvg==="undefined"?"engine.js":0,typeof drawChart==="undefined"?"chart.js":0].filter(Boolean);
+const BUILD=25,MISS=[typeof U==="undefined"?"symbols.js":0,typeof evalFvg==="undefined"?"engine.js":0,typeof drawChart==="undefined"?"chart.js":0].filter(Boolean);
 const MKT_LABEL={crypto:"کریپتو",forex:"فارکس",metal:"فلزات",commodity:"کالا",index:"شاخص",stock:"سهام"};
 const METALS=new Set(["XAUUSD","XAGUSD","XCUUSD"]),COMMODITIES=new Set(["WTICO","BRENT","NATGAS","CORN","WHEAT","SOYBEAN","SUGAR"]),INDICES=new Set(["SPX500","NAS100","US30","US2000","DE30","UK100","FR40","EU50","JP225","HK33","AU200"]);
 function mktOf(u){if(u[1])return"crypto";const id=u[0];if(METALS.has(id))return"metal";if(COMMODITIES.has(id))return"commodity";if(INDICES.has(id))return"index";if(u[4]&&u[4]!==0&&u[4]!=="0")return"forex";return"stock"}
@@ -259,7 +261,10 @@ $("auto").checked=LS("bs_auto")!=="false";$("dot").classList.toggle("on",$("auto
 $("ex").value=LS("bs_ex")||"";$("ex").onchange=()=>{LS("bs_ex",$("ex").value.trim());renderChips();scan()};$("tok").value=LS("bs_tok")||"";$("env").value=LS("bs_env")||"practice";
 $("tok").onchange=()=>{LS("bs_tok",$("tok").value.trim());scan()};$("env").onchange=()=>{LS("bs_env",$("env").value);scan()};
 ["mode","m15","h1","h1s","only"].forEach(i=>{const v=LS("bs_"+i);if(v!=null){$(i).type==="checkbox"?$(i).checked=v==="true":$(i).value=v}});
-if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
-$("ver").textContent="v"+BUILD;
+if("serviceWorker"in navigator){const hadCtl=!!navigator.serviceWorker.controller;let rl=false;
+navigator.serviceWorker.register("sw.js").then(g=>{g.update();document.addEventListener("visibilitychange",()=>{if(!document.hidden)g.update()})}).catch(()=>{});
+navigator.serviceWorker.addEventListener("controllerchange",()=>{if(rl||!hadCtl)return;rl=true;location.reload()})}
+$("upd").onclick=async()=>{$("upd").textContent="در حال پاک‌سازی…";try{const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(g=>g.unregister()));const ks=await caches.keys();await Promise.all(ks.map(k=>caches.delete(k)))}catch(e){}location.href=location.pathname+"?r="+Date.now()};
+$("ver").textContent="v"+BUILD;$("verl").textContent="نسخه‌ی فعلی: v"+BUILD;
 if(MISS.length){$("list").innerHTML="";$("st").innerHTML='<span style="color:#ff6b6b">⚠ این فایل‌ها قدیمی یا آپلودنشده‌اند: '+MISS.join("، ")+' — آپلود کنید و چند بار رفرش کنید</span>'}else{renderChips();scan()}
 </script></body></html>
