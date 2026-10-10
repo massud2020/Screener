@@ -8,6 +8,7 @@ const g=cv.getContext("2d");g.scale(dpr,dpr);g.fillStyle="#08090b";g.fillRect(0,
 const AX=56,pw=W-AX,PH=330,RY=360,RH=90,GR="#3f9d6a",RD="#d15a52";
 let hi=Math.max(...vis.map(c=>c.high)),lo=Math.min(...vis.map(c=>c.low));const rg=hi-lo;
 if(row.side){hi=Math.max(hi,row.entry);lo=Math.min(lo,row.entry);if(Math.abs(row.sl-row.entry)<rg*.8){hi=Math.max(hi,row.sl);lo=Math.min(lo,row.sl)}}
+if(row.ctx&&row.ctx.do!=null&&Math.abs(row.ctx.do-vis[N-1].close)<rg*1.2){hi=Math.max(hi,row.ctx.do);lo=Math.min(lo,row.ctx.do)}
 if(row.tp!=null&&Math.abs(row.tp-row.entry)<rg*.8){hi=Math.max(hi,row.tp);lo=Math.min(lo,row.tp)}
 const pd=(hi-lo)*.06||1e-9;hi+=pd;lo-=pd;
 const X=i=>(i+.5)*pw/N,Y=p=>Math.min(PH-8,Math.max(8,8+(hi-p)/(hi-lo)*(PH-16))),bw=Math.max(2,pw/N*.72);
@@ -20,7 +21,7 @@ g.restore();
 const tri=(x,y,up,s,col)=>{g.fillStyle=col;g.beginPath();if(up){g.moveTo(x,y-s);g.lineTo(x-s*.9,y+s*.7);g.lineTo(x+s*.9,y+s*.7)}else{g.moveTo(x,y+s);g.lineTo(x-s*.9,y-s*.7);g.lineTo(x+s*.9,y-s*.7)}g.closePath();g.fill()};
 const dash=(a,b,c,e,col)=>{g.strokeStyle=col;g.lineWidth=1;g.setLineDash([4,3]);g.beginPath();g.moveTo(a,b);g.lineTo(c,e);g.stroke();g.setLineDash([])};
 if(row.ctx){const cx=row.ctx,x0=t=>{const j=vis.findIndex(c=>c.time>=t);return j<0?N-1:j};
-if(cx.do!=null){dash(0,Y(cx.do),pw,Y(cx.do),"#ffb020");g.fillStyle="#ffb020";g.fillText("DO",3,Y(cx.do)-7)}
+if(cx.do!=null){dash(0,Y(cx.do),pw,Y(cx.do),"#ffb020");g.fillStyle="#ffb020";g.fillText("DO",pw-20,Y(cx.do)-7)}
 if(cx.fvg){const xa=X(x0(cx.fvg.t0)),ya=Y(cx.fvg.hi),hh=Math.max(2,Y(cx.fvg.lo)-ya);g.fillStyle="rgba(74,163,255,.22)";g.fillRect(xa,ya,pw-xa,hh);g.strokeStyle="#4aa3ff";g.lineWidth=1;g.strokeRect(xa,ya,pw-xa,hh);g.fillStyle="#4aa3ff";g.textAlign="right";g.fillText("FVG",xa-4,ya+hh/2);g.textAlign="left"}
 if(cx.sweepT){const j=x0(cx.sweepT);g.strokeStyle="#fff";g.lineWidth=1.3;g.beginPath();g.arc(X(j),Y(cx.sweepExt),5,0,6.3);g.stroke();g.fillStyle="#fff";g.fillText("SWEEP",Math.min(X(j)+8,pw-40),Y(cx.sweepExt)+(cx.sweepExt<cx.do?10:-10))}
 if(cx.mssLvl!=null&&cx.sweepT){const j=x0(cx.sweepT);dash(X(j),Y(cx.mssLvl),pw,Y(cx.mssLvl),"#c77dff");g.fillStyle="#c77dff";g.textAlign="right";g.fillText("MSS",X(j)-4,Y(cx.mssLvl));g.textAlign="left"}}
