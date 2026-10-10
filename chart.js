@@ -5,7 +5,7 @@ const row=evaluate(d.id,d.a,d.h,S,now),mk=marks(d.a,d.h,S,now).filter(m=>m.time>
 const dpr=(typeof devicePixelRatio!=="undefined"&&devicePixelRatio)||1,W=cv.parentNode.clientWidth||360,H=470;
 cv.width=W*dpr;cv.height=H*dpr;cv.style.width=W+"px";cv.style.height=H+"px";
 const g=cv.getContext("2d");g.scale(dpr,dpr);g.fillStyle="#08090b";g.fillRect(0,0,W,H);
-const AX=56,pw=W-AX,PH=330,RY=360,RH=90,GR="#3f9d6a",RD="#d15a52";
+const AX=Math.max(56,Math.ceil(vis[N-1].close.toFixed(d.dg).length*6.2)+14),pw=W-AX,PH=330,RY=360,RH=90,GR="#3f9d6a",RD="#d15a52";
 let hi=Math.max(...vis.map(c=>c.high)),lo=Math.min(...vis.map(c=>c.low));const rg=hi-lo;
 if(row.side){hi=Math.max(hi,row.entry);lo=Math.min(lo,row.entry);if(Math.abs(row.sl-row.entry)<rg*.8){hi=Math.max(hi,row.sl);lo=Math.min(lo,row.sl)}}
 if(row.ctx&&row.ctx.do!=null&&Math.abs(row.ctx.do-vis[N-1].close)<rg*1.2){hi=Math.max(hi,row.ctx.do);lo=Math.min(lo,row.ctx.do)}
@@ -38,5 +38,5 @@ g.strokeStyle="#e8eaed";g.lineWidth=1.2;g.beginPath();let on=false;R.forEach((v,
 g.fillStyle="#8a8f98";g.fillText("RSI "+S.rsiP,6,RY+10);const lr=R.filter(v=>v!=null).pop();if(lr!=null){const rc=lr>=70?RD:lr<=30?GR:"#4aa3ff";g.fillStyle=rc;g.fillRect(pw+1,ry(lr)-7,AX-2,14);g.fillStyle="#fff";g.fillText(lr.toFixed(1),pw+4,ry(lr))}
 const lv=a=>{for(let i=a.length-1;i>=0;i--)if(a[i]!=null)return a[i];return null};
 g.font="11px system-ui";g.fillStyle="rgba(8,9,11,.8)";g.fillRect(2,2,pw-4,17);g.fillStyle="#8a8f98";g.fillText("EMA",6,10.5);let lx=36;
-[[S.ef,"#35e07b",E[0]],[S.em,"#ff6ec7",E[1]],[S.es,"#ff3b3b",E[2]]].forEach(([n,col,a])=>{const v=lv(a),t=n+(v!=null?" "+v.toFixed(d.dg):""),w=g.measureText(t).width;g.strokeStyle=col;g.lineWidth=2.5;g.beginPath();g.moveTo(lx,10.5);g.lineTo(lx+12,10.5);g.stroke();g.fillStyle=col;g.fillText(t,lx+16,10.5);lx+=w+24});
+[[S.ef,"#35e07b",E[0]],[S.em,"#ff6ec7",E[1]],[S.es,"#ff3b3b",E[2]]].forEach(([n,col,a])=>{const v=lv(a),t=n+(v!=null?" "+Number(v.toPrecision(5)):""),w=g.measureText(t).width;g.strokeStyle=col;g.lineWidth=2.5;g.beginPath();g.moveTo(lx,10.5);g.lineTo(lx+12,10.5);g.stroke();g.fillStyle=col;g.fillText(t,lx+16,10.5);lx+=w+24});
 return{row,n:mk.length,price:lp}}
