@@ -5,14 +5,15 @@ function rsi(c,p){const o=Array(c.length).fill(null);if(c.length<=p)return o;let
 function atr(cs,p){const o=Array(cs.length).fill(null);if(cs.length<=p)return o;const tr=cs.map((c,i)=>i?Math.max(c.high-c.low,Math.abs(c.high-cs[i-1].close),Math.abs(c.low-cs[i-1].close)):c.high-c.low);let s=0;for(let i=0;i<p;i++)s+=tr[i];let pr=s/p;o[p-1]=pr;for(let i=p;i<tr.length;i++){pr=(pr*(p-1)+tr[i])/p;o[i]=pr}return o}
 const last=(a,n=0)=>{const v=a[a.length-1-n];return v==null||!isFinite(v)?null:v};
 function dropForming(c,sec,now){return c.length&&now<c[c.length-1].time+sec?c.slice(0,-1):c}
-function resample(c,min){const sz=min*60,m=new Map();for(const x of c){const b=Math.floor(x.time/sz)*sz;(m.get(b)||m.set(b,[]).get(b)).push(x)}return[...m.entries()].sort((a,b)=>a[0]-b[0]).map(([time,a])=>({time,open:a[0].open,high:Math.max(...a.map(x=>x.high)),low:Math.min(...a.map(x=>x.low)),close:a[a.length-1].close}))}
-function checkPattern(l4,dir,minRatio){let g=0,r=0,gs=0,rs=0;for(const c of l4){const s=c.high-c.low;if(c.close>c.open){g++;gs+=s}else if(c.close<c.open){r++;rs+=s}else return{ok:false,ratio:0}}
+function resample(c,min){const sz=min*60,m=new Map();for(const x of c){const b=Math.floor(x.time/sz)*sz;(m.get(b)||m.set(b,[]).get(b)).push(x)}return[...m.entries()].sort((a,b)=>a[0]-b[0]).map(([time,a])=>({time,open:a[0].open,high:Math.max(...a.map(x=>x.high)),low:Math.min(...a.map(x=>x.low)),close:a[a.length-1].close,volume:a.reduce((z,x)=>z+(x.volume||0),0)}))}
+function checkPattern(l4,dir,minRatio){let g=0,r=0,gs=0,rs=0;for(const c of l4){const body=Math.abs(c.close-c.open);if(c.close>c.open){g++;gs+=body}else if(c.close<c.open){r++;rs+=body}else return{ok:false,ratio:0}}
 if(dir==="LONG"){if(g!==1||r!==3||!(l4[0].close>l4[0].open)||rs<=0)return{ok:false,ratio:0};const q=gs/rs;return{ok:q>=minRatio,ratio:q}}
 if(r!==1||g!==3||!(l4[0].close<l4[0].open)||gs<=0)return{ok:false,ratio:0};const q=rs/gs;return{ok:q>=minRatio,ratio:q}}
 function checkPullback(m5,efA,dir,lb){const i=m5.length-1;if(i<1)return{ok:false,swing:0};const b=m5[i],ef=efA[i];if(ef==null)return{ok:false,swing:0};let t=false,lo=b.low,hi=b.high;for(let j=Math.max(0,i-lb);j<i;j++){const c=m5[j],e=efA[j];if(e==null)continue;lo=Math.min(lo,c.low);hi=Math.max(hi,c.high);if(dir==="LONG"&&c.low<=e)t=true;if(dir==="SHORT"&&c.high>=e)t=true}
 return dir==="LONG"?{ok:t&&b.close>ef&&b.close>=b.open,swing:lo}:{ok:t&&b.close<ef&&b.close<=b.open,swing:hi}}
 function evaluate(id,raw5,rawH1,S,now=Date.now()/1000){S={...DEF,...S};const m5=dropForming(raw5,300,now),h1=dropForming(rawH1,3600,now);const price=raw5.length?raw5[raw5.length-1].close:0;const row=(x={})=>({id,side:null,price,fail:null,...x});
 if(S.mode==="fvg")return evalFvg(id,raw5,m5,h1,S,now);
+if(S.mode==="mtf")return evalMtf(id,raw5,m5,h1,S,now);
 if(m5.length<S.es+3)return row({fail:"تاریخچه M5 کافی نیست"});
 const cl=m5.map(c=>c.close),efA=ema(cl,S.ef),emA=ema(cl,S.em),esA=ema(cl,S.es),rA=rsi(cl,S.rsiP),aA=atr(m5,S.atrP);
 const ef=last(efA),em=last(emA),es=last(esA),r=last(rA),a=last(aA),efp=last(efA,1),emp=last(emA,1);
@@ -33,6 +34,7 @@ function lci(b,sec,asOf){let lo=0,hi=b.length-1,a=-1;while(lo<=hi){const m=(lo+h
 function divExit(c,rA,from,isLong){const H=[],L=[];for(let i=Math.max(from+2,1);i<c.length-1;i++){const r=rA[i];if(r==null)continue;if(c[i].high>=c[i-1].high&&c[i].high>=c[i+1].high)H.push({i,p:c[i].high,r});if(c[i].low<=c[i-1].low&&c[i].low<=c[i+1].low)L.push({i,p:c[i].low,r})}
 const A=isLong?H:L;for(let k=1;k<A.length;k++){const a=A[k-1],b=A[k];if(a.i<=from)continue;if(isLong?(b.p>a.p&&b.r<a.r):(b.p<a.p&&b.r>a.r))return{i:b.i,p:c[b.i].close}}return null}
 function marks(raw5,rawH1,S,now=Date.now()/1000){S={...DEF,...S};const m5=dropForming(raw5,300,now),h1=dropForming(rawH1,3600,now);if(S.mode==="fvg")return marksFvg(m5,h1);
+if(S.mode==="mtf")return marksMtf(m5,h1,S);
 if(m5.length<S.es+4)return[];
 const cl=m5.map(c=>c.close),efA=ema(cl,S.ef),emA=ema(cl,S.em),esA=ema(cl,S.es),rA=rsi(cl,S.rsiP),aA=atr(m5,S.atrP),pb=S.mode==="pullback";
 const m15=S.m15?resample(m5,15):[],mc=m15.map(c=>c.close),mf=S.m15?ema(mc,S.ef):[],mm=S.m15?ema(mc,S.em):[];
@@ -49,6 +51,38 @@ const sz=b.high-b.low;let d=pb?Math.abs(b.close-(side==="LONG"?bl.swing:bs.swing
 const ex=divExit(m5,rA,i,side==="LONG");if(!ex)continue;free=m5[ex.i].time;out.push({time:b.time,side,entry:b.close,sl:side==="LONG"?b.close-d:b.close+d,tp:ex.p,t2:m5[ex.i].time})}
 return out}
 
+
+
+// Forex_Crypto_MTF_LongShort v3 chart strategy port. Signals use closed candles.
+const MTF={minScore:5,rsiLongMin:40,rsiLongMax:75,rsiShortMin:25,rsiShortMax:60,ratio:.5,atrPeriod:14,atrSL:1.5,rr:2.5,minAtrPct:.02,maxAtrPct:2,minSep:.10};
+function mtfAt(m5,h1,S,i){
+ if(i<205||h1.length<205)return null;
+ const c=m5.slice(0,i+1),cl=c.map(x=>x.close),efA=ema(cl,21),emA=ema(cl,50),esA=ema(cl,200),rA=rsi(cl,14),aA=atr(c,14);
+ const ef=last(efA),em=last(emA),es=last(esA),r=last(rA),a=last(aA),efp=last(efA,1),price=c[c.length-1].close;
+ if([ef,em,es,r,a,efp].some(x=>x==null)||a<=0)return null;
+ const rates=[c[c.length-1],c[c.length-2],c[c.length-3],c[c.length-4]],pl=checkPattern(rates,"LONG",.5),ps=checkPattern(rates,"SHORT",.5);
+ const coreL=ef>em&&em>es&&pl.ok,coreS=ef<em&&em<es&&ps.ok;if(!coreL&&!coreS)return null;
+ const pct=a/price*100;if(pct<MTF.minAtrPct||pct>MTF.maxAtrPct)return null;
+ if(Math.abs(ef-em)<MTF.minSep*a||Math.abs(em-es)<MTF.minSep*a)return null;
+ const m15=resample(c,15),k15=lci(m15,900,c[c.length-1].time+300),h1k=lci(h1,3600,c[c.length-1].time+300);
+ if(k15<50||h1k<200)return null;
+ const m15c=m15.slice(0,k15+1).map(x=>x.close),m15f=last(ema(m15c,21)),m15m=last(ema(m15c,50));
+ const hc=h1.slice(0,h1k+1).map(x=>x.close),hf=last(ema(hc,21)),hm=last(ema(hc,50)),hs=last(ema(hc,200)),hprice=hc[hc.length-1];
+ if([m15f,m15m,hf,hm,hs].some(x=>x==null))return null;
+ const m15L=m15f>m15m,m15S=m15f<m15m,h1L=hprice>hs&&hf>hm&&hm>hs,h1S=hprice<hs&&hf<hm&&hm<hs;
+ const day=Math.floor(c[c.length-1].time/86400),today=c.filter(x=>Math.floor(x.time/86400)===day&&x.time+300<=c[c.length-1].time+300);let pv=0,vv=0;
+ for(const x of today){const v=x.volume||0;if(v>0){pv+=((x.high+x.low+x.close)/3)*v;vv+=v}}
+ // Volume-weighted daily VWAP is required by the source strategy; no signal if provider lacks usable volume.
+ if(vv<=0)return null;const vwap=pv/vv,vwapL=price>vwap,vwapS=price<vwap;
+ const slopeL=ef>efp,slopeS=ef<efp,rsiL=r>=MTF.rsiLongMin&&r<=MTF.rsiLongMax,rsiS=r>=MTF.rsiShortMin&&r<=MTF.rsiShortMax;
+ const scoreL=(rsiL?1:0)+(m15L?2:0)+(h1L?2:0)+(vwapL?1:0)+(slopeL?1:0)+1;
+ const scoreS=(rsiS?1:0)+(m15S?2:0)+(h1S?2:0)+(vwapS?1:0)+(slopeS?1:0)+1;
+ let side=null,score=0,ratio=0;if(coreL&&scoreL>=MTF.minScore){side="LONG";score=scoreL;ratio=pl.ratio}else if(coreS&&scoreS>=MTF.minScore){side="SHORT";score=scoreS;ratio=ps.ratio}else return null;
+ const sl=side==="LONG"?price-a*MTF.atrSL:price+a*MTF.atrSL,tp=side==="LONG"?price+(price-sl)*MTF.rr:price-(sl-price)*MTF.rr;
+ return{time:c[c.length-1].time,side,entry:price,sl,tp,rr:MTF.rr,score,maxScore:8,rsi:r,atr:a,atrPct:pct,vwap,ratio,ef,em,es};
+}
+function evalMtf(id,raw5,m5,h1,S,now){const price=raw5.length?raw5[raw5.length-1].close:0,row=(x={})=>({id,side:null,price,fail:null,...x});if(m5.length<210||h1.length<205)return row({fail:"تاریخچه M5/H1 کافی نیست"});const sig=mtfAt(m5,h1,S,m5.length-1);if(!sig)return row({fail:"شرایط کامل استراتژی یا حجم VWAP برقرار نیست"});return row({...sig,id,price,fail:null});}
+function marksMtf(m5,h1,S){if(m5.length<210||h1.length<205)return[];const out=[];let free=0;for(let i=Math.max(205,m5.length-180);i<m5.length;i++){if(m5[i].time<=free)continue;const st=mtfAt(m5,h1,S,i);if(!st)continue;let t2,px,done=false;for(let q=i+1;q<m5.length;q++){const c=m5[q],hitSL=st.side==="LONG"?c.low<=st.sl:c.high>=st.sl,hitTP=st.side==="LONG"?c.high>=st.tp:c.low<=st.tp;if(hitSL||hitTP){t2=c.time;px=hitSL?st.sl:st.tp;done=true;break}}out.push({...st,tp:done?px:st.tp,t2:done?t2:undefined});free=done?t2:Infinity;}return out}
 
 // ---- Daily Open + Liquidity Sweep + MSS + FVG (Charttora) ----
 const FP={maxAge:60,disp:.5,minGap:.1,firstTap:true,needDO:true};
@@ -89,4 +123,4 @@ for(let q=i+1;q<m5.length;q++){const c=m5[q],hs=d?c.high>=sl:c.low<=sl,ht=d?c.lo
 out.push({time:m5[i].time,side:d?"SHORT":"LONG",entry,sl,tp:done?px:tp,t2:done?t2:undefined});free=done?t2:Infinity;break}}
 return out}
 
-if(typeof module!=="undefined")module.exports={dropForming,marks,fvgPrep,fvgAt,divExit,evaluate,ema,rsi,atr,resample,checkPattern,checkPullback};
+if(typeof module!=="undefined")module.exports={dropForming,marks,fvgPrep,fvgAt,divExit,evaluate,ema,rsi,atr,resample,checkPattern,checkPullback,mtfAt,evalMtf,marksMtf};
