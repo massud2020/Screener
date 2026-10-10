@@ -47,4 +47,4 @@ const sz=b.high-b.low;let d=pb?Math.abs(b.close-(side==="LONG"?bl.swing:bs.swing
 const ex=divExit(m5,rA,i,side==="LONG");if(!ex)continue;free=m5[ex.i].time;out.push({time:b.time,side,entry:b.close,sl:side==="LONG"?b.close-d:b.close+d,tp:ex.p,t2:m5[ex.i].time})}
 return out}
 
-if(typeof module!=="undefined")module.exports={marks,divExit,evaluate,ema,rsi,atr,resample,checkPattern,checkPullback};
+if(typeof module!=="undefined")module.exports={dropForming,marks,divExit,evaluate,ema,rsi,atr,resample,checkPattern,checkPullback};
