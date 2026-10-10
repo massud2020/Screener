@@ -26,7 +26,10 @@ const lab=(p,bg,fg)=>{const y=Y(p);g.fillStyle=bg;g.fillRect(pw+1,y-7,AX-2,14);g
 L?tri(X(i),Y(vis[i].low)+12,true,7,col):tri(X(i),Y(vis[i].high)-12,false,7,col)}
 const lp=vis[N-1].close,lc=vis[N-1].close>=vis[N-1].open?GR:RD;dash(0,Y(lp),pw,Y(lp),lc);g.fillStyle=lc;g.fillRect(pw+1,Y(lp)-7,AX-2,14);g.fillStyle="#fff";g.fillText(lp.toFixed(d.dg),pw+4,Y(lp));
 g.strokeStyle="#23262d";g.lineWidth=1;g.strokeRect(0,RY,pw,RH);
-const ry=v=>RY+RH-(v/100)*RH;[30,70].forEach(v=>dash(0,ry(v),pw,ry(v),"#2f333b"));
+const ry=v=>RY+RH-(v/100)*RH;g.fillStyle="rgba(209,90,82,.10)";g.fillRect(0,ry(100),pw,ry(70)-ry(100));g.fillStyle="rgba(63,157,106,.10)";g.fillRect(0,ry(30),pw,ry(0)-ry(30));g.fillStyle="#8a8f98";g.fillText("70",pw-18,ry(70)-6);g.fillText("30",pw-18,ry(30)-6);[30,70].forEach(v=>dash(0,ry(v),pw,ry(v),"#2f333b"));
 g.strokeStyle="#e8eaed";g.lineWidth=1.2;g.beginPath();let on=false;R.forEach((v,i)=>{if(v==null){on=false;return}on?g.lineTo(X(i),ry(v)):g.moveTo(X(i),ry(v));on=true});g.stroke();
-g.fillStyle="#8a8f98";g.fillText("RSI",4,RY+9);const lr=R.filter(v=>v!=null).pop();if(lr!=null)g.fillText(lr.toFixed(1),pw+4,ry(lr));
+g.fillStyle="#8a8f98";g.fillText("RSI "+S.rsiP,6,RY+10);const lr=R.filter(v=>v!=null).pop();if(lr!=null){const rc=lr>=70?RD:lr<=30?GR:"#4aa3ff";g.fillStyle=rc;g.fillRect(pw+1,ry(lr)-7,AX-2,14);g.fillStyle="#fff";g.fillText(lr.toFixed(1),pw+4,ry(lr))}
+const lv=a=>{for(let i=a.length-1;i>=0;i--)if(a[i]!=null)return a[i];return null};
+g.font="11px system-ui";g.fillStyle="rgba(8,9,11,.8)";g.fillRect(2,2,pw-4,17);g.fillStyle="#8a8f98";g.fillText("EMA",6,10.5);let lx=36;
+[[S.ef,"#35e07b",E[0]],[S.em,"#ff6ec7",E[1]],[S.es,"#ff3b3b",E[2]]].forEach(([n,col,a])=>{const v=lv(a),t=n+(v!=null?" "+v.toFixed(d.dg):""),w=g.measureText(t).width;g.strokeStyle=col;g.lineWidth=2.5;g.beginPath();g.moveTo(lx,10.5);g.lineTo(lx+12,10.5);g.stroke();g.fillStyle=col;g.fillText(t,lx+16,10.5);lx+=w+24});
 return{row,n:mk.length,price:lp}}
