@@ -2,8 +2,8 @@
 const fs=require("fs"),{evaluate,dropForming}=require("./engine.js"),{U}=require("./symbols.js");
 const TOPIC=process.env.NTFY_TOPIC,TOK=process.env.OANDA_TOKEN,ENV=process.env.OANDA_ENV||"practice";
 const F15=process.env.M15!=="0",FH1=process.env.H1!=="0",STRICT=process.env.H1_STRICT==="1";
-const MODES=(process.env.MODES||"pullback,pattern").split(",");
-const NAME={pullback:"پولبک EMA",pattern:"الگوی ۳+۱"},MAXAGE=1200,SF=".state/sent.json";
+const MODES=(process.env.MODES||"pullback,pattern,fvg").split(",");
+const NAME={pullback:"پولبک EMA",pattern:"الگوی ۳+۱",fvg:"Daily Open + Sweep + MSS + FVG"},MAXAGE=1200,SF=".state/sent.json";
 async function J(url,o={}){const r=await fetch(url,{...o,signal:AbortSignal.timeout(15000)});if(!r.ok)throw new Error("HTTP "+r.status);return r.json()}
 const okx=async(id,bar)=>{const j=await J(`https://www.okx.com/api/v5/market/candles?instId=${id}&bar=${bar}&limit=300`);if(j.code!=="0")return[];return j.data.map(r=>({time:+r[0]/1000,open:+r[1],high:+r[2],low:+r[3],close:+r[4]})).sort((a,b)=>a.time-b.time)};
 const oanda=async(i,g)=>{const h=ENV==="live"?"api-fxtrade":"api-fxpractice",j=await J(`https://${h}.oanda.com/v3/instruments/${i}/candles?granularity=${g}&count=300&price=M`,{headers:{Authorization:"Bearer "+TOK}});return j.candles.map(c=>({time:Date.parse(c.time)/1000,open:+c.mid.o,high:+c.mid.h,low:+c.mid.l,close:+c.mid.c})).filter(c=>isFinite(c.close))};
@@ -24,7 +24,7 @@ for(const mode of MODES){const r=evaluate(u[0],a,h,{mode,m15:F15,h1:FH1,h1Strict
 const fresh=found.filter(f=>!sent[f.key]).sort((a,b)=>a.u[0].localeCompare(b.u[0]));
 console.log(`${new Date().toISOString()} symbols ${U.length}, errors ${errs}, signals ${found.length}, new ${fresh.length}`);
 let n=0;for(const f of fresh){if(n>=10)break;const{u,mode,r}=f,L=r.side==="LONG",d=u[3];
-try{await notify(`${L?"🟢 LONG":"🔴 SHORT"} ${u[0]}`,`${NAME[mode]}\nEntry ${r.entry.toFixed(d)} | SL ${r.sl.toFixed(d)}\nRSI ${r.rsi.toFixed(1)} | کندل ${Math.max(0,Math.round(f.age/60))} دقیقه پیش بسته شد\nخروج: اولین واگرایی RSI`,5,[L?"green_circle":"red_circle","chart_with_upwards_trend"]);sent[f.key]=now;n++}catch(e){console.error("notify failed",e.message)}}
+try{await notify(`${L?"🟢 LONG":"🔴 SHORT"} ${u[0]}`,`${NAME[mode]}\nEntry ${r.entry.toFixed(d)} | SL ${r.sl.toFixed(d)}${r.tp!=null?` | TP ${r.tp.toFixed(d)}`:""}\nRSI ${r.rsi.toFixed(1)} | کندل ${Math.max(0,Math.round(f.age/60))} دقیقه پیش بسته شد\n${r.tp!=null?"RR "+r.rr.toFixed(1):"خروج: اولین واگرایی RSI"}`,5,[L?"green_circle":"red_circle","chart_with_upwards_trend"]);sent[f.key]=now;n++}catch(e){console.error("notify failed",e.message)}}
 if(fresh.length>10){try{await notify("سیگنال‌های بیشتر",`${fresh.length-10} سیگنال دیگر هم هست؛ اپ را باز کنید.`,3,["information_source"]);for(const f of fresh.slice(10))sent[f.key]=now}catch(e){}}
 fs.mkdirSync(".state",{recursive:true});fs.writeFileSync(SF,JSON.stringify(sent))}
 (async()=>{

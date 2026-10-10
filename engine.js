@@ -12,6 +12,7 @@ if(r!==1||g!==3||!(l4[0].close<l4[0].open)||gs<=0)return{ok:false,ratio:0};const
 function checkPullback(m5,efA,dir,lb){const i=m5.length-1;if(i<1)return{ok:false,swing:0};const b=m5[i],ef=efA[i];if(ef==null)return{ok:false,swing:0};let t=false,lo=b.low,hi=b.high;for(let j=Math.max(0,i-lb);j<i;j++){const c=m5[j],e=efA[j];if(e==null)continue;lo=Math.min(lo,c.low);hi=Math.max(hi,c.high);if(dir==="LONG"&&c.low<=e)t=true;if(dir==="SHORT"&&c.high>=e)t=true}
 return dir==="LONG"?{ok:t&&b.close>ef&&b.close>=b.open,swing:lo}:{ok:t&&b.close<ef&&b.close<=b.open,swing:hi}}
 function evaluate(id,raw5,rawH1,S,now=Date.now()/1000){S={...DEF,...S};const m5=dropForming(raw5,300,now),h1=dropForming(rawH1,3600,now);const price=raw5.length?raw5[raw5.length-1].close:0;const row=(x={})=>({id,side:null,price,fail:null,...x});
+if(S.mode==="fvg")return evalFvg(id,raw5,m5,h1,S,now);
 if(m5.length<S.es+3)return row({fail:"تاریخچه M5 کافی نیست"});
 const cl=m5.map(c=>c.close),efA=ema(cl,S.ef),emA=ema(cl,S.em),esA=ema(cl,S.es),rA=rsi(cl,S.rsiP),aA=atr(m5,S.atrP);
 const ef=last(efA),em=last(emA),es=last(esA),r=last(rA),a=last(aA),efp=last(efA,1),emp=last(emA,1);
@@ -31,7 +32,8 @@ return row({side,rsi:r,atr:a,entry:side?sc:null,sl,fail,ef,em,es})}
 function lci(b,sec,asOf){let lo=0,hi=b.length-1,a=-1;while(lo<=hi){const m=(lo+hi)>>1;if(b[m].time+sec<=asOf){a=m;lo=m+1}else hi=m-1}return a}
 function divExit(c,rA,from,isLong){const H=[],L=[];for(let i=Math.max(from+2,1);i<c.length-1;i++){const r=rA[i];if(r==null)continue;if(c[i].high>=c[i-1].high&&c[i].high>=c[i+1].high)H.push({i,p:c[i].high,r});if(c[i].low<=c[i-1].low&&c[i].low<=c[i+1].low)L.push({i,p:c[i].low,r})}
 const A=isLong?H:L;for(let k=1;k<A.length;k++){const a=A[k-1],b=A[k];if(a.i<=from)continue;if(isLong?(b.p>a.p&&b.r<a.r):(b.p<a.p&&b.r>a.r))return{i:b.i,p:c[b.i].close}}return null}
-function marks(raw5,rawH1,S,now=Date.now()/1000){S={...DEF,...S};const m5=dropForming(raw5,300,now),h1=dropForming(rawH1,3600,now);if(m5.length<S.es+4)return[];
+function marks(raw5,rawH1,S,now=Date.now()/1000){S={...DEF,...S};const m5=dropForming(raw5,300,now),h1=dropForming(rawH1,3600,now);if(S.mode==="fvg")return marksFvg(m5,h1);
+if(m5.length<S.es+4)return[];
 const cl=m5.map(c=>c.close),efA=ema(cl,S.ef),emA=ema(cl,S.em),esA=ema(cl,S.es),rA=rsi(cl,S.rsiP),aA=atr(m5,S.atrP),pb=S.mode==="pullback";
 const m15=S.m15?resample(m5,15):[],mc=m15.map(c=>c.close),mf=S.m15?ema(mc,S.ef):[],mm=S.m15?ema(mc,S.em):[];
 const hc=h1.map(c=>c.close),hf=S.h1?ema(hc,S.ef):[],hm=S.h1?ema(hc,S.em):[],hs=S.h1?ema(hc,S.es):[];const out=[];let free=0;
@@ -47,4 +49,44 @@ const sz=b.high-b.low;let d=pb?Math.abs(b.close-(side==="LONG"?bl.swing:bs.swing
 const ex=divExit(m5,rA,i,side==="LONG");if(!ex)continue;free=m5[ex.i].time;out.push({time:b.time,side,entry:b.close,sl:side==="LONG"?b.close-d:b.close+d,tp:ex.p,t2:m5[ex.i].time})}
 return out}
 
-if(typeof module!=="undefined")module.exports={dropForming,marks,divExit,evaluate,ema,rsi,atr,resample,checkPattern,checkPullback};
+
+// ---- Daily Open + Liquidity Sweep + MSS + FVG (Charttora) ----
+const FP={maxAge:60,disp:.5,minGap:.1,firstTap:true,needDO:true};
+function mir(c){return{time:c.time,open:-c.open,high:-c.low,low:-c.high,close:-c.close}}
+function piv(a,n,hi){const o=Array(a.length).fill(false);for(let j=n;j<a.length-n;j++){let ok=true;for(let k=1;k<=n&&ok;k++)ok=hi?(a[j].high>=a[j-k].high&&a[j].high>a[j+k].high):(a[j].low<=a[j-k].low&&a[j].low<a[j+k].low);o[j]=ok}return o}
+function fvgPrep(m5,h1,mirror){const f=mirror?mir:(c=>c),c=m5.map(f),H=h1.map(f);let cur=-1,dv=0;const DO=c.map(x=>{const d=Math.floor(x.time/86400);if(d!==cur){cur=d;dv=x.open}return dv});
+return{c,h1:H,atr:atr(c,14),PH3:piv(c,3,true),PH2:piv(c,2,true),PL3:piv(c,3,false),DO,PHh:piv(H,2,true),PLh:piv(H,2,false),hs:ema(H.map(x=>x.close),200)}}
+function biasAt(X,k){const h=X.h1,hs=[],ls=[];for(let j=k-2;j>=2&&j>k-150&&(hs.length<2||ls.length<2);j--){if(X.PHh[j]&&hs.length<2)hs.push(h[j].high);if(X.PLh[j]&&ls.length<2)ls.push(h[j].low)}
+if(hs.length===2&&ls.length===2){if(hs[0]>hs[1]&&ls[0]>ls[1])return 1;if(hs[0]<hs[1]&&ls[0]<ls[1])return -1}
+const s=X.hs[k];return s==null?0:h[k].close>s?1:-1}
+function fvgAt(X,i,P){const c=X.c;if(i<30||i>=c.length)return null;
+const k=lci(X.h1,3600,c[i].time+300);if(k<10||biasAt(X,k)!==1)return null;const aI=X.atr[i];if(aI==null)return null;
+for(let s=i-2;s>=Math.max(4,i-P.maxAge);s--){const cs=c[s];if(P.needDO&&!(cs.low<X.DO[s]))continue;
+let L=null;for(let p=s-4;p>=Math.max(3,s-60);p--)if(X.PL3[p]&&c[p].low>cs.low&&c[p].low<cs.close){L=c[p].low;break}if(L==null)continue;
+let lower=false;for(let q=s+1;q<=i;q++)if(c[q].low<=cs.low){lower=true;break}if(lower)continue;
+let M=null;for(let p=s-2;p>=Math.max(2,s-40);p--)if(X.PH2[p]){M=c[p].high;break}if(M==null)continue;
+let m=-1;for(let q=s+1;q<=i-1;q++){const cq=c[q],a=X.atr[q];if(a==null)continue;if(cq.close>M&&cq.close>cq.open&&cq.close-cq.open>=P.disp*a){m=q;break}}if(m<0)continue;
+let f=-1,lo=0,hi=0;for(let j=m;j>=s+1;j--){if(j+2>i)continue;const c1=c[j-1],c2=c[j],c3=c[j+1];if(c3.low>c1.high&&c2.close>c2.open&&c3.low-c1.high>=P.minGap*aI){f=j;lo=c1.high;hi=c3.low;break}}if(f<0)continue;
+let bad=false;for(let q=f+2;q<i;q++)if(c[q].close<lo||(P.firstTap&&c[q].low<=hi)){bad=true;break}if(bad)continue;
+const ci=c[i];if(!(ci.low<=hi&&ci.close>=lo&&ci.close>ci.open))continue;
+const entry=ci.close,sl=cs.low-.1*aI;if(entry<=sl)continue;const risk=entry-sl;
+let tp=null;for(let p=i-3;p>=Math.max(3,i-300);p--)if(X.PH3[p]&&c[p].high>entry&&(c[p].high-entry)/risk>=1.5&&(tp==null||c[p].high<tp))tp=c[p].high;
+if(tp==null)tp=entry+2.5*risk;
+return{entry,sl,tp,rr:(tp-entry)/risk,do:X.DO[i],lvl:L,sweepT:cs.time,sweepExt:cs.low,mssLvl:M,mssT:c[m].time,fvg:{t0:c[f-1].time,lo,hi}}}
+return null}
+function evalFvg(id,raw5,m5,h1,S,now){const price=raw5.length?raw5[raw5.length-1].close:0,row=(x={})=>({id,side:null,price,fail:null,...x});
+if(m5.length<260||h1.length<210)return row({fail:"تاریخچه کافی نیست"});
+const i=m5.length-1,r=last(rsi(m5.map(c=>c.close),S.rsiP));
+for(const mirror of[false,true]){const X=fvgPrep(m5,h1,mirror),st=fvgAt(X,i,FP);if(!st)continue;
+const g=mirror?-1:1,cx={do:g*st.do,lvl:g*st.lvl,sweepT:st.sweepT,sweepExt:g*st.sweepExt,mssLvl:g*st.mssLvl,mssT:st.mssT,fvg:mirror?{t0:st.fvg.t0,lo:-st.fvg.hi,hi:-st.fvg.lo}:st.fvg};
+return row({side:mirror?"SHORT":"LONG",entry:g*st.entry,sl:g*st.sl,tp:g*st.tp,rr:st.rr,rsi:r,ctx:cx})}
+const X=fvgPrep(m5,h1,false),k=lci(X.h1,3600,m5[i].time+300),b=k>=10?biasAt(X,k):0;
+return row({rsi:r,ctx:{do:X.DO[i]},fail:"بایاس "+(b===1?"صعودی":b===-1?"نزولی":"-")+"؛ بدون ستاپ Sweep→MSS→FVG"})}
+function marksFvg(m5,h1){if(m5.length<260||h1.length<210)return[];const out=[],XS=[fvgPrep(m5,h1,false),fvgPrep(m5,h1,true)];let free=0;
+for(let i=Math.max(m5.length-180,40);i<m5.length;i++){if(m5[i].time<=free)continue;
+for(let d=0;d<2;d++){const st=fvgAt(XS[d],i,FP);if(!st)continue;const g=d?-1:1,entry=g*st.entry,sl=g*st.sl,tp=g*st.tp;let t2,px,done=false;
+for(let q=i+1;q<m5.length;q++){const c=m5[q],hs=d?c.high>=sl:c.low<=sl,ht=d?c.low<=tp:c.high>=tp;if(hs||ht){t2=c.time;px=hs?sl:tp;done=true;break}}
+out.push({time:m5[i].time,side:d?"SHORT":"LONG",entry,sl,tp:done?px:tp,t2:done?t2:undefined});free=done?t2:Infinity;break}}
+return out}
+
+if(typeof module!=="undefined")module.exports={dropForming,marks,fvgPrep,fvgAt,divExit,evaluate,ema,rsi,atr,resample,checkPattern,checkPullback};
