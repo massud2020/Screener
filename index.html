@@ -15,10 +15,19 @@ button.p{background:var(--g);border-color:var(--g);color:#fff}.st{color:var(--mu
 .b{padding:2px 10px;border-radius:99px;font-size:12px;font-weight:700}.LONG{background:var(--g)}.SHORT{background:var(--r)}.NONE{background:var(--bd);color:var(--mu)}
 .d{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;margin-top:8px;font-size:13px;direction:ltr;color:var(--mu)}.d b{color:var(--tx);font-weight:500}
 .f{color:var(--mu);font-size:12px;margin-top:4px}
+.ld{display:none;align-items:center;gap:14px;background:linear-gradient(135deg,#0f1713,#111318);border:1px solid #1f3a2b;border-radius:16px;padding:12px 14px;margin-top:8px;box-shadow:0 0 24px rgba(53,224,123,.08)}.ld.on{display:flex}
+.rd{width:54px;height:54px;border-radius:50%;position:relative;flex:none;overflow:hidden;border:1px solid #2a5a3f;background:radial-gradient(circle,#35e07b 0 2px,transparent 3px),repeating-radial-gradient(circle,#1a3a29 0 1px,transparent 1px 13px),#0a110d}
+.rd:before,.rd:after{content:"";position:absolute;background:#1a3a29}.rd:before{left:50%;top:0;bottom:0;width:1px}.rd:after{top:50%;left:0;right:0;height:1px}
+.rd i{position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,rgba(53,224,123,.75),rgba(53,224,123,0) 75deg,transparent 0);animation:sp 1.3s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}@keyframes sh{from{transform:translateX(-100%)}to{transform:translateX(100%)}}@keyframes pl{50%{opacity:.45}}
+.lt{flex:1;min-width:0}.lt b{font-size:17px;font-variant-numeric:tabular-nums;direction:ltr;display:inline-block}.lt span{display:block;color:var(--mu);font-size:12px;margin-top:2px;direction:ltr;text-align:right;animation:pl 1.4s ease-in-out infinite}
+.pb{height:7px;border-radius:99px;background:#1c1f26;overflow:hidden;margin-top:9px;position:relative}.pb u{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,#2f8a5a,#35e07b);transition:width .25s;position:relative;overflow:hidden}
+.pb u:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.45),transparent);animation:sh 1.1s linear infinite}
 </style></head><body>
 <header><h1>Balanced Screener</h1>
 <div class="bar"><button class="p" id="go">اسکن</button><select id="mode"><option value="pullback">پولبک EMA</option><option value="pattern">الگوی ۳+۱</option></select><button id="gs">تنظیمات</button></div>
 <div class="set" id="set"><label>فیلتر M15<input type="checkbox" id="m15" checked></label><label>فیلتر H1<input type="checkbox" id="h1" checked></label><label>H1 سخت‌گیرانه<input type="checkbox" id="h1s"></label><label>فقط سیگنال‌دارها<input type="checkbox" id="only"></label><label>OANDA توکن<input type="password" id="tok" placeholder="API token" style="width:55%;direction:ltr;background:var(--bg);color:var(--tx);border:1px solid var(--bd);border-radius:8px;padding:6px"></label><label>نوع حساب OANDA<select id="env"><option value="practice">Practice</option><option value="live">Live</option></select></label><label>سهام اضافه<input id="ex" placeholder="مثلاً SHOP, UBER" style="width:55%;direction:ltr;background:var(--bg);color:var(--tx);border:1px solid var(--bd);border-radius:8px;padding:6px"></label><label>اسکن خودکار (۶۰ثانیه)<input type="checkbox" id="auto"></label></div>
+<div class="ld" id="ld"><div class="rd"><i></i></div><div class="lt"><b id="lp">0 / 0</b><span id="ls">در حال دریافت داده…</span><div class="pb"><u id="lb"></u></div></div></div>
 <div class="st" id="st">آماده</div></header>
 <main id="list"></main>
 <div id="ov" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:9;overflow:auto;padding:calc(env(safe-area-inset-top) + 10px) 12px 16px;direction:ltr"><div class="top" style="margin-bottom:8px"><b id="ct"></b><button id="cx">✕ بستن</button></div><div><canvas id="cv"></canvas></div><div class="st" id="ci" style="direction:rtl;line-height:1.7"></div></div>
@@ -38,17 +47,22 @@ if(u[1]){try{[a,h]=await Promise.all([okx(u[1],"5m"),okx(u[1],"1H")])}catch(e){}
 else if(u[4]&&localStorage.getItem("bs_tok")){try{[a,h]=await Promise.all([oanda(u[4],"M5"),oanda(u[4],"H1")])}catch(e){}}
 if((a.length<210||h.length<210)&&u[2]){const[x,y]=await Promise.all([yh(u[2],"5m","5d"),yh(u[2],"1h","6mo")]);if(x.length>a.length)a=x;if(y.length>h.length)h=y}return[a,h]}
 function S(){return{mode:$("mode").value,m15:$("m15").checked,h1:$("h1").checked,h1Strict:$("h1s").checked}}
-async function scan(){if(busy)return;busy=true;$("go").disabled=true;$("st").textContent="در حال اسکن…";const L=U.concat((localStorage.getItem("bs_ex")||"").split(/[ ,]+/).filter(Boolean).map(t=>[t.toUpperCase(),0,t.toUpperCase(),2,0]));const rows=[],errs=[];let i=0;
-await Promise.all(Array.from({length:5},async()=>{while(i<L.length){const u=L[i++];try{const[a,h]=await load(u);if(a.length<50)throw 0;const r=evaluate(u[0],a,h,S());r.d=u[3];D[u[0]]={id:u[0],a,h,dg:u[3]};rows.push(r)}catch(e){errs.push(u[0])}}}));
+async function scan(){if(busy)return;busy=true;$("go").disabled=true;$("st").textContent="در حال اسکن…";const L=U.concat((localStorage.getItem("bs_ex")||"").split(/[ ,]+/).filter(Boolean).map(t=>[t.toUpperCase(),0,t.toUpperCase(),2,0]));const rows=[],errs=[];let i=0,dn=0;const fa=n=>n.toLocaleString("fa-IR"),prog=n=>{$("lb").style.width=(dn/L.length*100)+"%";$("lp").textContent=fa(dn)+" / "+fa(L.length);$("ls").textContent=n};$("ld").classList.add("on");prog("در حال دریافت داده…");
+await Promise.all(Array.from({length:5},async()=>{while(i<L.length){const u=L[i++];try{const[a,h]=await load(u);if(a.length<50)throw 0;const r=evaluate(u[0],a,h,S());r.d=u[3];D[u[0]]={id:u[0],a,h,dg:u[3],u};rows.push(r)}catch(e){errs.push(u[0])}dn++;prog(u[0])}}));
 const rk=r=>r.side==="LONG"?0:r.side==="SHORT"?1:2;rows.sort((a,b)=>rk(a)-rk(b)||a.id.localeCompare(b.id));
 const only=$("only").checked,vis=only?rows.filter(r=>r.side):rows,n=rows.filter(r=>r.side).length;
 $("list").innerHTML=vis.map(r=>`<div class="row" data-id="${r.id}" style="cursor:pointer"><div class="top"><span class="sym">${r.id}</span><span class="b ${r.side||"NONE"}">${r.side||"—"}</span></div>${r.side?`<div class="d"><span>Entry <b>${r.entry.toFixed(r.d)}</b></span><span>SL <b>${r.sl.toFixed(r.d)}</b></span><span>RSI <b>${r.rsi.toFixed(1)}</b></span><span>Exit <b>اولین واگرایی RSI</b></span></div>`:`<div class="f">${r.fail||""}${r.rsi?" · RSI "+r.rsi.toFixed(1):""}</div>`}</div>`).join("")||'<div class="f">نتیجه‌ای نیست</div>';
 $("st").textContent=`${n} سیگنال از ${rows.length} نماد · ${new Date().toLocaleTimeString("fa-IR")}`+(errs.length?` · خطا: ${errs.join(", ")}`:"");
-busy=false;$("go").disabled=false}
+$("ld").classList.remove("on");busy=false;$("go").disabled=false}
 $("go").onclick=scan;
-function openChart(id){$("ov").style.display="block";$("ct").textContent=id+" · "+(S().mode==="pullback"?"پولبک EMA":"الگوی ۳+۱");const x=drawChart($("cv"),D[id],S(),Date.now()/1000),r=x.row;
-$("ci").textContent=(r.side?`${r.side} · Entry ${r.entry.toFixed(D[id].dg)} · SL ${r.sl.toFixed(D[id].dg)} · خروج: اولین واگرایی RSI`:`سیگنال فعلی ندارد (${r.fail||"-"})`)+` · سیگنال‌های بسته‌شده در ۱۸۰ کندل اخیر: ${x.n} · سبز EMA21، صورتی EMA50، قرمز EMA200، ▲▼ ورود، ● خروج واگرایی`}
-$("list").onclick=e=>{const w=e.target.closest(".row");if(w&&D[w.dataset.id])openChart(w.dataset.id)};$("cx").onclick=()=>{$("ov").style.display="none"};
+let liveT=null,liveId=null,liveBusy=false,lastH1=0;
+async function fetchTF(u,tf){const m=tf==="5m";if(u[1])return okx(u[1],m?"5m":"1H");if(u[4]&&localStorage.getItem("bs_tok")){try{return await oanda(u[4],m?"M5":"H1")}catch(e){}}return u[2]?yh(u[2],m?"5m":"1h",m?"5d":"6mo"):[]}
+function render(id){const d=D[id],x=drawChart($("cv"),d,S(),Date.now()/1000),r=x.row;
+$("ci").textContent=`● زنده · ${new Date().toLocaleTimeString("fa-IR")} · قیمت ${x.price.toFixed(d.dg)} · `+(r.side?`${r.side} · Entry ${r.entry.toFixed(d.dg)} · SL ${r.sl.toFixed(d.dg)} · خروج: اولین واگرایی RSI`:`سیگنال فعلی ندارد (${r.fail||"-"})`)+` · سیگنال‌های بسته‌شده اخیر: ${x.n} · سبز EMA21، صورتی EMA50، قرمز EMA200، ▲▼ ورود، ● خروج`}
+async function tick(){if(!liveId||document.hidden||liveBusy)return;liveBusy=true;const id=liveId,d=D[id];try{const a=await fetchTF(d.u,"5m");if(a.length>=210&&id===liveId)d.a=a;if(Date.now()-lastH1>60000){const h=await fetchTF(d.u,"1h");if(h.length>=210)d.h=h;lastH1=Date.now()}if(id===liveId)render(id)}catch(e){}liveBusy=false}
+function openChart(id){$("ov").style.display="block";$("ct").textContent=id+" · "+(S().mode==="pullback"?"پولبک EMA":"الگوی ۳+۱");render(id);liveId=id;lastH1=Date.now();clearInterval(liveT);liveT=setInterval(tick,D[id].u[1]?5000:15000);tick()}
+function closeChart(){clearInterval(liveT);liveT=null;liveId=null;$("ov").style.display="none"}
+$("list").onclick=e=>{const w=e.target.closest(".row");if(w&&D[w.dataset.id])openChart(w.dataset.id)};$("cx").onclick=closeChart;
 $("gs").onclick=()=>$("set").classList.toggle("on");
 ["mode","m15","h1","h1s","only"].forEach(i=>$(i).onchange=()=>{localStorage.setItem("bs_"+i,$(i).type==="checkbox"?$(i).checked:$(i).value);scan()});
 $("auto").onchange=()=>{clearInterval(timer);if($("auto").checked)timer=setInterval(scan,60000)};
