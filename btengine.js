@@ -55,24 +55,38 @@ out.push({i,side,entry:b.close,sl:side==="LONG"?b.close-d:b.close+d,tp:null})}
 return out}
 // Trade simulation. Entry at the signal bar close. SL is checked before TP on the same bar (conservative).
 // RSI-divergence exit is only known one bar after the pivot, so it exits at that later bar's close.
+// Market sessions: a gap of more than gapMin minutes between two consecutive bars means the market was closed.
+function sessInfo(m,gapMin){const n=m.length,start=new Int32Array(n),end=new Int32Array(n),gs=gapMin*60;let s=0,cnt=0;
+for(let i=1;i<=n;i++){if(i===n||m[i].time-m[i-1].time>gs){for(let j=s;j<i;j++){start[j]=s;end[j]=i-1}s=i;if(i<n)cnt++}}return{start,end,gaps:cnt}}
 function simTrade(P,s,O){const m=P.m5,L=s.side==="LONG",risk=Math.abs(s.entry-s.sl);if(!(risk>0))return null;let target=null,divIdx=-1;
 if(O.exit==="rr")target=L?s.entry+O.rr*risk:s.entry-O.rr*risk;else if(s.tp!=null)target=s.tp;else{const ex=divExit(m,P.rA,s.i,L);if(ex)divIdx=ex.i+1}
-const end=Math.min(m.length-1,s.i+O.maxBars);
+const MH=O.mh&&O.mh.gap&&O.mh.forceClose&&P.si?O.mh:null,se=MH?P.si.end[s.i]:-1,realClose=!!MH&&se<m.length-1;
+let end=Math.min(m.length-1,s.i+O.maxBars);if(realClose)end=Math.min(end,se);
 for(let q=s.i+1;q<=end;q++){const c=m[q];
 if(L?c.low<=s.sl:c.high>=s.sl)return{q,px:L?Math.min(s.sl,c.open):Math.max(s.sl,c.open),why:"SL"};
 if(target!=null&&(L?c.high>=target:c.low<=target))return{q,px:target,why:"TP"};
 if(divIdx>=0&&q===divIdx)return{q,px:c.close,why:"RSI"}}
+if(realClose&&end===se&&se<s.i+O.maxBars)return{q:end,px:m[end].close,why:"CLOSE"};
 if(s.i+O.maxBars<=m.length-1)return{q:end,px:m[end].close,why:"TIME"};return{q:end,px:m[end].close,why:"OPEN"}}
-function btTrades(P,mode,sym,O,lo,hi){const sigs=btSignals(P,mode,lo,hi),m=P.m5,out=[];let free=-1;
-for(const s of sigs){if(s.i<=free)continue;const r=simTrade(P,s,O);if(!r)continue;if(r.why==="OPEN")break;free=r.q;
+function btTrades(P,mode,sym,O,lo,hi,info){const sigs=btSignals(P,mode,lo,hi),m=P.m5,out=[],M=O.mh||null,useGap=!!(M&&M.gap),hrOn=!!(M&&M.hFrom!=null&&M.hTo!=null&&M.hFrom!==M.hTo),wkOn=!!(M&&M.noWeekend);let free=-1;
+if(useGap&&(!P.si||P.siKey!==M.gapMin)){P.si=sessInfo(m,M.gapMin);P.siKey=M.gapMin}
+if(info&&!info.blocked)info.blocked={open:0,close:0,hours:0,weekend:0};const si=useGap?P.si:null;
+for(const s of sigs){if(s.i<=free)continue;
+if(M){const t=m[s.i].time,dow=(Math.floor(t/86400)+4)%7,hr=Math.floor((t%86400)/3600);let why=null;
+if(wkOn&&(dow===6||dow===0))why="weekend";
+else if(hrOn&&!(M.hFrom<M.hTo?hr>=M.hFrom&&hr<M.hTo:hr>=M.hFrom||hr<M.hTo))why="hours";
+else if(si&&s.i-si.start[s.i]<M.afterOpen)why="open";
+else if(si&&si.end[s.i]<m.length-1&&si.end[s.i]-s.i<Math.max(M.beforeClose,M.forceClose?1:0))why="close";
+if(why){if(info)info.blocked[why]++;continue}}
+const r=simTrade(P,s,O);if(!r)continue;if(r.why==="OPEN")break;free=r.q;
 const risk=Math.abs(s.entry-s.sl),L=s.side==="LONG",g=(L?r.px-s.entry:s.entry-r.px)/risk,cost=O.cost>0?(O.cost/100*s.entry)/risk:0;
-out.push({sym,mode,side:s.side,iE:s.i,tE:m[s.i].time,iX:r.q,tX:m[r.q].time,entry:s.entry,sl:s.sl,tp:s.tp,px:r.px,why:r.why,R:g-cost,bars:r.q-s.i})}
+out.push({sym,mode,side:s.side,iE:s.i,tE:m[s.i].time,iX:r.q,tX:m[r.q].time,entry:s.entry,sl:s.sl,tp:s.tp,px:r.px,why:r.why,R:g-cost,bars:r.q-s.i,cross:si?si.start[r.q]!==si.start[s.i]:false})}
 return out}
 function metrics(tr,riskPct){const n=tr.length;if(!n)return{n:0};const s=[...tr].sort((a,b)=>a.tX-b.tX);
-let sum=0,gw=0,gl=0,w=0,peak=0,dd=0,eq=1,pe=1,ddp=0,bars=0,best=-1e9,worst=1e9,st=0,ms=0,ln=0,sn=0,lr=0,sr=0;
-for(const t of s){sum+=t.R;if(t.R>0){gw+=t.R;w++;st=0}else{gl-=t.R;st++;if(st>ms)ms=st}bars+=t.bars;best=Math.max(best,t.R);worst=Math.min(worst,t.R);
+let sum=0,gw=0,gl=0,w=0,peak=0,dd=0,eq=1,pe=1,ddp=0,bars=0,best=-1e9,worst=1e9,st=0,ms=0,ln=0,sn=0,lr=0,sr=0,cx=0,cl=0;
+for(const t of s){sum+=t.R;if(t.R>0){gw+=t.R;w++;st=0}else{gl-=t.R;st++;if(st>ms)ms=st}bars+=t.bars;if(t.cross)cx++;if(t.why==="CLOSE")cl++;best=Math.max(best,t.R);worst=Math.min(worst,t.R);
 if(sum>peak)peak=sum;dd=Math.max(dd,peak-sum);eq*=Math.max(0,1+riskPct/100*t.R);if(eq>pe)pe=eq;ddp=Math.max(ddp,(pe-eq)/pe*100);
 if(t.side==="LONG"){ln++;lr+=t.R}else{sn++;sr+=t.R}}
-return{n,w,wr:w/n*100,sumR:sum,avgR:sum/n,pf:gl>0?gw/gl:(gw>0?Infinity:0),ddR:dd,ddPct:ddp,retPct:(eq-1)*100,avgBars:bars/n,best,worst,maxLossStreak:ms,longs:ln,shorts:sn,avgLong:ln?lr/ln:0,avgShort:sn?sr/sn:0}}
+return{n,w,wr:w/n*100,sumR:sum,avgR:sum/n,pf:gl>0?gw/gl:(gw>0?Infinity:0),ddR:dd,ddPct:ddp,retPct:(eq-1)*100,avgBars:bars/n,best,worst,maxLossStreak:ms,longs:ln,shorts:sn,avgLong:ln?lr/ln:0,avgShort:sn?sr/sn:0,crossed:cx,closeExits:cl}}
 function equityOf(tr){const s=[...tr].sort((a,b)=>a.tX-b.tX);let c=0;return s.map(t=>({t:t.tX,v:(c+=t.R)}))}
-if(typeof module!=="undefined")module.exports={parseMT5,decodeBuf,candlesOf,btPrep,btSignals,btTrades,simTrade,metrics,equityOf,pbAt};
+if(typeof module!=="undefined")module.exports={sessInfo,parseMT5,decodeBuf,candlesOf,btPrep,btSignals,btTrades,simTrade,metrics,equityOf,pbAt};

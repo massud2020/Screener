@@ -61,7 +61,7 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;direction:ltr;margin-
 </style>
 </head>
 <body>
-<header class="bar"><div class="brand"><i>📊</i><div>بک‌تست <small id="bv" style="color:var(--mu);font-size:11px;font-weight:500">v27</small></div></div><a class="btn" href="index.html">← اسکرینر</a></header>
+<header class="bar"><div class="brand"><i>📊</i><div>بک‌تست <small id="bv" style="color:var(--mu);font-size:11px;font-weight:500">v28</small></div></div><a class="btn" href="index.html">← اسکرینر</a></header>
 
 <section class="card">
   <h2>۱ · داده‌ی MT5</h2>
@@ -110,6 +110,22 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;direction:ltr;margin-
   <label class="sw"><span>فیلتر M15<small>EMA21 در برابر EMA50 در ۱۵ دقیقه</small></span><input type="checkbox" id="m15" checked></label>
   <label class="sw"><span>فیلتر H1<small>قیمت نسبت به EMA200 ساعتی</small></span><input type="checkbox" id="h1" checked></label>
   <label class="sw"><span>H1 سخت‌گیرانه</span><input type="checkbox" id="h1s"></label>
+  <h3>تعطیلی بازار و ساعت معامله</h3>
+  <label class="sw"><span>توقف در تعطیلی بازار<small>جاهایی که بین دو کندل پشت‌سرهم شکاف بزرگ هست (آخر هفته، وقفه‌ی روزانه) تعطیلی حساب می‌شه</small></span><input type="checkbox" id="mhOn" checked></label>
+  <div class="row2" style="margin-top:8px">
+    <div class="fld">حداقل طول شکاف (دقیقه)<input id="gapMin" type="number" inputmode="numeric" min="5" value="30"></div>
+    <div class="fld">معامله‌ی باز هنگام تعطیلی<select id="mhHold"><option value="close">بستن قبل از تعطیلی</option><option value="hold">نگه‌داشتن (با ریسک گپ)</option></select></div>
+  </div>
+  <div class="row2" style="margin-top:10px">
+    <div class="fld">بدون ورود بعد از بازگشایی (کندل)<input id="aOpen" type="number" inputmode="numeric" min="0" value="12"></div>
+    <div class="fld">بدون ورود قبل از تعطیلی (کندل)<input id="bClose" type="number" inputmode="numeric" min="0" value="6"></div>
+  </div>
+  <div class="row2" style="margin-top:10px">
+    <div class="fld">ساعت مجاز ورود: از (ساعت سرور)<input id="hF" type="number" inputmode="numeric" min="0" max="23" placeholder="مثلاً ۷"></div>
+    <div class="fld">تا<input id="hT" type="number" inputmode="numeric" min="0" max="24" placeholder="مثلاً ۲۰"></div>
+  </div>
+  <label class="sw" style="margin-top:6px"><span>بدون ورود در شنبه و یکشنبه<small>بر اساس تاریخ فایل MT5 (ساعت سرور)</small></span><input type="checkbox" id="noWk"></label>
+  <p class="hint">«بستن قبل از تعطیلی»: اگه تا آخرین کندل قبل از تعطیلی نه SL خورده نه TP، با قیمت همون کندل خارج می‌شه. «نگه‌داشتن»: معامله از تعطیلی رد می‌شه و گپ بازگشایی روی قیمت بازشدن حساب می‌شه. ساعت‌ها خالی بمونن یعنی بدون محدودیت. برای کریپتو (۲۴ ساعته) شکافی پیدا نمی‌شه و فقط فیلتر ساعت و شنبه/یکشنبه اثر دارن.</p>
   <h3>بازه‌ی زمانی (اختیاری)</h3>
   <div class="row2"><div class="fld">از تاریخ<input id="from" type="date"></div><div class="fld">تا تاریخ<input id="to" type="date"></div></div>
 </section>
@@ -117,7 +133,7 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;direction:ltr;margin-
 <button class="p" id="run">▶ اجرای بک‌تست</button>
 <div class="prog" id="pg"><div class="pt"><span id="pt">…</span><button id="cn" style="min-height:30px;padding:0 10px;font-size:12px">توقف</button></div><div class="pb"><u id="pu"></u></div></div>
 <section id="res"></section>
-<script src="engine.js?v=27"></script><script src="btengine.js?v=27"></script>
+<script src="engine.js?v=28"></script><script src="btengine.js?v=28"></script>
 <script>
 const $=i=>document.getElementById(i),fa=n=>Number(n).toLocaleString("fa-IR"),LS=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}};
 const COL={pullback:"#35e07b",pattern:"#4aa3ff",fvg:"#ffb020"},NAME={pullback:"پولبک EMA",pattern:"الگوی ۳+۱",fvg:"Sweep + MSS + FVG"};
@@ -137,7 +153,7 @@ const sym=f.name.replace(/\.[^.]+$/,"").split(/[_\s,.\-]/)[0].toUpperCase()||"SY
 const k=datasets.findIndex(x=>x.name===d.name);k>=0?datasets[k]=d:datasets.push(d);await dbPut({name:d.name,sym:d.sym,dg:d.dg,t:d.t,o:d.o,h:d.h,l:d.l,c:d.c});okN++}catch(x){errs.push(f.name+": "+(x&&x.message||"خطا در خواندن"))}}
 inp.value="";renderDs();msg.className="msg "+(errs.length?"err":"ok");msg.innerHTML=(okN?`✓ ${fa(okN)} فایل اضافه شد. `:"")+errs.map(x=>`<div>⚠ ${x}</div>`).join("")};
 /* ---------- settings persistence ---------- */
-const FIELDS=["sP","sN","sF","m15","h1","h1s"],NUMS=["ex","rr","mb","cost","risk","from","to"];
+const FIELDS=["sP","sN","sF","m15","h1","h1s","mhOn","noWk"],NUMS=["ex","rr","mb","cost","risk","from","to","gapMin","mhHold","aOpen","bClose","hF","hT"];
 FIELDS.forEach(i=>{const v=LS("bt_"+i);if(v!=null)$(i).checked=v==="true";$(i).onchange=()=>LS("bt_"+i,$(i).checked)});
 NUMS.forEach(i=>{const v=LS("bt_"+i);if(v!=null)$(i).value=v;$(i).onchange=()=>LS("bt_"+i,$(i).value)});
 /* ---------- run ---------- */
@@ -146,24 +162,29 @@ function idxRange(t,from,to){let lo=0,hi=t.length-1;while(lo<t.length&&t[lo]<fro
 async function run(){if(running)return;const sel=datasets.filter(d=>d.on),modes=[$("sP").checked&&"pullback",$("sN").checked&&"pattern",$("sF").checked&&"fvg"].filter(Boolean),msg=$("fm");
 if(!sel.length){msg.className="msg err";msg.textContent="اول یک فایل داده اضافه و انتخاب کن";window.scrollTo({top:0,behavior:"smooth"});return}
 if(!modes.length){msg.className="msg err";msg.textContent="حداقل یک استراتژی را روشن کن";return}
-const O={exit:$("ex").value,rr:Math.max(.5,+$("rr").value||2),maxBars:Math.max(12,Math.round(+$("mb").value||288)),cost:Math.max(0,+$("cost").value||0)},S={m15:$("m15").checked,h1:$("h1").checked,h1Strict:$("h1s").checked},risk=Math.max(.1,+$("risk").value||1);
+const hf=$("hF").value.trim(),ht=$("hT").value.trim(),O={exit:$("ex").value,rr:Math.max(.5,+$("rr").value||2),maxBars:Math.max(12,Math.round(+$("mb").value||288)),cost:Math.max(0,+$("cost").value||0),mh:{gap:$("mhOn").checked,gapMin:Math.max(5,+$("gapMin").value||30),afterOpen:Math.max(0,Math.round(+$("aOpen").value||0)),beforeClose:Math.max(0,Math.round(+$("bClose").value||0)),forceClose:$("mhHold").value==="close",hFrom:hf===""?null:Math.min(24,Math.max(0,+hf)),hTo:ht===""?null:Math.min(24,Math.max(0,+ht)),noWeekend:$("noWk").checked}},S={m15:$("m15").checked,h1:$("h1").checked,h1Strict:$("h1s").checked},risk=Math.max(.1,+$("risk").value||1);
 const from=$("from").value?Date.parse($("from").value+"T00:00:00Z")/1000:0,to=$("to").value?Date.parse($("to").value+"T23:59:59Z")/1000:Infinity;
-running=true;cancel=false;$("run").disabled=true;$("pg").classList.add("on");$("res").innerHTML="";const all={},steps=sel.length*modes.length;let k=0;modes.forEach(m=>all[m]=[]);
+running=true;cancel=false;$("run").disabled=true;$("pg").classList.add("on");$("res").innerHTML="";const all={},blk={},gapsBy={},steps=sel.length*modes.length;let k=0;modes.forEach(m=>{all[m]=[];blk[m]={open:0,close:0,hours:0,weekend:0}});
 try{for(const d of sel){if(cancel)break;$("pt").textContent=`آماده‌سازی ${d.sym}…`;await tick();const m5=candlesOf(d),[lo,hi]=idxRange(d.t,from,to);if(hi-lo<500){k+=modes.length;continue}
-const P=btPrep(m5,S);for(const m of modes){if(cancel)break;$("pt").textContent=`${d.sym} · ${NAME[m]} (${fa(k+1)} از ${fa(steps)})`;$("pu").style.width=(k/steps*100)+"%";await tick();all[m].push(...btTrades(P,m,d.sym,O,lo,hi));k++}}}
+const P=btPrep(m5,S);if(O.mh.gap)gapsBy[d.sym]=sessInfo(m5,O.mh.gapMin).gaps;for(const m of modes){if(cancel)break;$("pt").textContent=`${d.sym} · ${NAME[m]} (${fa(k+1)} از ${fa(steps)})`;$("pu").style.width=(k/steps*100)+"%";await tick();all[m].push(...btTrades(P,m,d.sym,O,lo,hi,{blocked:blk[m]}));k++}}}
 catch(e){msg.className="msg err";msg.textContent="خطا در اجرا: "+(e&&e.message||e)}
-$("pu").style.width="100%";running=false;$("run").disabled=false;$("pg").classList.remove("on");RESULT={all,risk,O,S,modes,cancelled:cancel};render()}
+$("pu").style.width="100%";running=false;$("run").disabled=false;$("pg").classList.remove("on");RESULT={all,blk,gapsBy,risk,O,S,modes,cancelled:cancel};render()}
 $("run").onclick=run;$("cn").onclick=()=>{cancel=true;$("pt").textContent="در حال توقف…"};
 /* ---------- results ---------- */
 const f2=(x,d=2)=>x==null||!isFinite(x)?"∞":x.toFixed(d),sg=x=>x>0?"pos":x<0?"neg":"";
-function statsCard(m,tr,risk){const s=metrics(tr,risk),c=COL[m];if(!s.n)return`<div class="sc" style="--c:${c}"><h4>${NAME[m]}</h4><div class="hint" style="margin-top:8px">در این داده هیچ معامله‌ای نبسته نشد.</div></div>`;
+function statsCard(m,tr,risk,bk,mh){const s=metrics(tr,risk),c=COL[m];if(!s.n)return`<div class="sc" style="--c:${c}"><h4>${NAME[m]}</h4><div class="hint" style="margin-top:8px">در این داده هیچ معامله‌ای نبسته نشد.</div></div>`;
 const srt=[...tr].sort((a,b)=>a.tE-b.tE),cut=Math.floor(srt.length*.7),a=metrics(srt.slice(0,cut),risk),b=metrics(srt.slice(cut),risk),ln=x=>x.n?`<bdi dir="rtl">${fa(x.n)} معامله · PF ${f2(x.pf)} · میانگین ${f2(x.avgR)}R</bdi>`:"—";
 return`<div class="sc" style="--c:${c}"><h4>${NAME[m]}<small>${fa(s.n)} معامله</small></h4>
 <div class="kv"><div><i>وین‌ریت</i><b>${f2(s.wr,1)}%</b></div><div><i>میانگین R</i><b class="${sg(s.avgR)}">${f2(s.avgR,3)}</b></div><div><i>Profit Factor</i><b class="${s.pf>=1?"pos":"neg"}">${f2(s.pf)}</b></div>
 <div><i>جمع R</i><b class="${sg(s.sumR)}">${f2(s.sumR,1)}</b></div><div><i>افت سرمایه (R)</i><b class="neg">−${f2(s.ddR,1)}</b></div><div><i>بازده با ریسک ${risk}%</i><b class="${sg(s.retPct)}">${s.retPct>1e6?">1M":f2(s.retPct,1)}%</b></div>
 <div><i>افت حداکثر %</i><b class="neg">−${f2(s.ddPct,1)}%</b></div><div><i>باخت متوالی</i><b>${fa(s.maxLossStreak)}</b></div><div><i>میانگین نگهداری</i><b>${f2(s.avgBars*5/60,1)}h</b></div></div>
 <div class="split"><div><span>۷۰٪ اول زمان</span>${ln(a)}</div><div><span>۳۰٪ آخر زمان</span>${ln(b)}</div><div><span>لانگ / شورت</span><bdi dir="ltr">${fa(s.longs)} (${f2(s.avgLong)}R) / ${fa(s.shorts)} (${f2(s.avgShort)}R)</bdi></div></div>
-${s.n<30?'<div class="warn">⚠ تعداد معامله کمتر از ۳۰ است؛ نتیجه قابل اتکا نیست. داده‌ی بیشتر یا نمادهای بیشتر اضافه کن.</div>':s.pf>3&&s.n<100?'<div class="warn">⚠ PF خیلی بالا با نمونه‌ی کم معمولاً شانسی است؛ روی داده‌ی جدید دوباره امتحان کن.</div>':""}</div>`}
+${mhLine(s,bk,mh)}${s.n<30?'<div class="warn">⚠ تعداد معامله کمتر از ۳۰ است؛ نتیجه قابل اتکا نیست. داده‌ی بیشتر یا نمادهای بیشتر اضافه کن.</div>':s.pf>3&&s.n<100?'<div class="warn">⚠ PF خیلی بالا با نمونه‌ی کم معمولاً شانسی است؛ روی داده‌ی جدید دوباره امتحان کن.</div>':""}</div>`}
+function mhLine(s,bk,mh){if(!mh)return"";const parts=[];const tot=bk?bk.open+bk.close+bk.hours+bk.weekend:0;
+if(tot)parts.push(`ورود مسدودشده: ${fa(tot)} (${[bk.open&&`بعد بازگشایی ${fa(bk.open)}`,bk.close&&`قبل تعطیلی ${fa(bk.close)}`,bk.hours&&`ساعت ${fa(bk.hours)}`,bk.weekend&&`آخر هفته ${fa(bk.weekend)}`].filter(Boolean).join("، ")})`);
+if(mh.gap&&mh.forceClose)parts.push(`بسته‌شده با تعطیلی بازار: ${fa(s.closeExits||0)} معامله`);
+if(mh.gap&&!mh.forceClose)parts.push(`نگه‌داشته‌شده از تعطیلی: ${fa(s.crossed||0)} معامله`);
+return parts.length?`<div class="hint" style="margin-top:10px;line-height:1.9">${parts.join("<br>")}</div>`:""}
 function drawEq(cv,series){const W=cv.parentNode.clientWidth||340,H=240,dpr=window.devicePixelRatio||1;cv.width=W*dpr;cv.height=H*dpr;cv.style.width=W+"px";cv.style.height=H+"px";const g=cv.getContext("2d");g.scale(dpr,dpr);g.fillStyle="#13151a";g.fillRect(0,0,W,H);
 let t0=Infinity,t1=-Infinity,v0=0,v1=0;series.forEach(s=>s.pts.forEach(p=>{if(p.t<t0)t0=p.t;if(p.t>t1)t1=p.t;if(p.v<v0)v0=p.v;if(p.v>v1)v1=p.v}));if(!isFinite(t0)||t1<=t0){g.fillStyle="#7a808c";g.font="12px system-ui";g.fillText("داده‌ی کافی نیست",12,24);return}
 const L=8,Rr=46,T=14,B=24,pw=W-L-Rr,ph=H-T-B,X=t=>L+(t-t0)/(t1-t0)*pw,Y=v=>T+(v1-v)/((v1-v0)||1)*ph;g.font="10px system-ui";g.textBaseline="middle";
@@ -174,7 +195,7 @@ g.fillStyle="#7a808c";g.textAlign="left";g.fillText(dstr(t0).slice(0,10),L,H-9);
 function render(){if(!RESULT)return;const{all,risk,modes,cancelled}=RESULT,total=modes.reduce((a,m)=>a+all[m].length,0);
 if(!total){$("res").innerHTML=`<div class="card"><div class="hint">هیچ معامله‌ای ساخته نشد${cancelled?" (اجرا متوقف شد)":""}. ممکنه داده کوتاه باشه (برای فیلتر H1 حدود ۳٬۰۰۰ کندل M5 لازمه) یا فیلترها خیلی سخت‌گیرانه باشن.</div></div>`;return}
 if(!viewMode||!modes.includes(viewMode))viewMode=modes[0];
-let h=(cancelled?'<div class="warn">اجرا نیمه‌کاره متوقف شد؛ نتایج ناقص‌اند.</div>':"")+modes.map(m=>statsCard(m,all[m],risk)).join("")+
+let h=(cancelled?'<div class="warn">اجرا نیمه‌کاره متوقف شد؛ نتایج ناقص‌اند.</div>':"")+(RESULT.O.mh.gap&&Object.keys(RESULT.gapsBy).length?`<div class="card" style="margin-top:14px"><div class="hint">تعطیلی‌های شناسایی‌شده (شکاف ≥ ${fa(RESULT.O.mh.gapMin)} دقیقه): ${Object.entries(RESULT.gapsBy).map(([k,v])=>`<bdi dir="ltr">${k} ${fa(v)}</bdi>`).join(" · ")}</div></div>`:"")+modes.map(m=>statsCard(m,all[m],risk,RESULT.blk[m],RESULT.O.mh)).join("")+
 `<div class="card"><h2>منحنی سرمایه (جمع R)</h2><canvas id="eq"></canvas><div class="lg">${modes.map(m=>`<span style="--c:${COL[m]}">${NAME[m]}</span>`).join("")}</div></div>
 <div class="card"><h2>جزئیات</h2><div class="seg" id="vm">${modes.map(m=>`<button data-m="${m}" class="${viewMode===m?"on":""}">${NAME[m]}</button>`).join("")}</div><div id="det"></div></div>
 <div class="note">فرض‌های شبیه‌سازی: ورود روی قیمت بسته‌شدن کندل سیگنال؛ اگر SL و TP توی یک کندل هر دو لمس بشن، SL حساب می‌شه؛ گپ‌ها روی قیمت بازشدن بدتر حساب می‌شن؛ در هر نماد و استراتژی هم‌زمان فقط یک معامله باز است؛ از کندل‌های آینده استفاده نمی‌شه (برای هر استراتژی با حذف داده‌ی آینده تست شده)؛ اسلیپیج و کمیسیون فقط از فیلد «هزینه» وارد می‌شن. «بازده ٪» با فرض ترکیب سود و مستقل‌بودن معاملات حساب می‌شه و با معامله‌ی زیاد غیرواقعی بزرگ می‌شه؛ بیشتر به R، PF و افت سرمایه نگاه کن. نتیجه‌ی گذشته تضمینی برای آینده نیست.</div>`;
@@ -185,7 +206,7 @@ const last=[...tr].sort((a,b)=>b.tE-a.tE).slice(0,60),dgOf=s=>(datasets.find(d=>
 $("det").innerHTML=`<div class="tw"><table><tr><th>نماد</th><th>معامله</th><th>وین</th><th>avg R</th><th>PF</th><th>جمع R</th></tr>${rows||'<tr><td colspan="6">—</td></tr>'}</table></div>
 <h3 style="margin-top:16px">آخرین معاملات (${fa(last.length)} از ${fa(tr.length)})</h3><div class="tw"><table><tr><th>زمان ورود</th><th>نماد</th><th>جهت</th><th>ورود</th><th>خروج</th><th>علت</th><th>R</th></tr>${last.map(t=>`<tr><td>${dstr(t.tE)}</td><td>${t.sym}</td><td class="${t.side==="LONG"?"pos":"neg"}">${t.side}</td><td>${t.entry.toFixed(dgOf(t.sym))}</td><td>${t.px.toFixed(dgOf(t.sym))}</td><td>${t.why}</td><td class="${sg(t.R)}">${f2(t.R,2)}</td></tr>`).join("")}</table></div>
 <button id="csv" style="margin-top:12px;width:100%">⬇ دانلود همه‌ی معاملات (CSV)</button>`;
-$("csv").onclick=()=>{const hd="symbol,strategy,side,entry_time,entry,sl,tp,exit_time,exit,reason,R,bars\n",body=[...tr].sort((a,b)=>a.tE-b.tE).map(t=>[t.sym,t.mode,t.side,dstr(t.tE),t.entry,t.sl,t.tp==null?"":t.tp,dstr(t.tX),t.px,t.why,t.R.toFixed(4),t.bars].join(",")).join("\n"),u=URL.createObjectURL(new Blob([hd+body],{type:"text/csv"})),a=document.createElement("a");a.href=u;a.download=`backtest_${viewMode}.csv`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000)}}
+$("csv").onclick=()=>{const hd="symbol,strategy,side,entry_time,entry,sl,tp,exit_time,exit,reason,R,bars,held_over_close\n",body=[...tr].sort((a,b)=>a.tE-b.tE).map(t=>[t.sym,t.mode,t.side,dstr(t.tE),t.entry,t.sl,t.tp==null?"":t.tp,dstr(t.tX),t.px,t.why,t.R.toFixed(4),t.bars,t.cross?1:0].join(",")).join("\n"),u=URL.createObjectURL(new Blob([hd+body],{type:"text/csv"})),a=document.createElement("a");a.href=u;a.download=`backtest_${viewMode}.csv`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000)}}
 $("res").onclick=e=>{const b=e.target.closest("#vm button");if(b){viewMode=b.dataset.m;document.querySelectorAll("#vm button").forEach(x=>x.classList.toggle("on",x===b));detail()}};
 window.addEventListener("resize",()=>{if(RESULT&&$("eq"))drawEq($("eq"),RESULT.modes.map(m=>({color:COL[m],pts:equityOf(RESULT.all[m])})))});
 (async()=>{datasets=(await dbAll()).map(d=>({...d,on:true}));renderDs();if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{})})();

@@ -177,9 +177,9 @@ a.btn.tv{border-color:#2962ff;background:#142a66}
   <div id="cw"><canvas id="cv"></canvas></div>
   <div id="ci"></div>
 </div>
-<script src="symbols.js?v=27"></script><script src="engine.js?v=27"></script><script src="chart.js?v=27"></script>
+<script src="symbols.js?v=28"></script><script src="engine.js?v=28"></script><script src="chart.js?v=28"></script>
 <script>
-const BUILD=27,MISS=[typeof U==="undefined"?"symbols.js":0,typeof evalFvg==="undefined"?"engine.js":0,typeof drawChart==="undefined"?"chart.js":0].filter(Boolean);
+const BUILD=28,MISS=[typeof U==="undefined"?"symbols.js":0,typeof evalFvg==="undefined"?"engine.js":0,typeof drawChart==="undefined"?"chart.js":0].filter(Boolean);
 const MKT_LABEL={crypto:"کریپتو",forex:"فارکس",metal:"فلزات",commodity:"کالا",index:"شاخص",stock:"سهام"};
 const METALS=new Set(["XAUUSD","XAGUSD","XCUUSD"]),COMMODITIES=new Set(["WTICO","BRENT","NATGAS","CORN","WHEAT","SOYBEAN","SUGAR"]),INDICES=new Set(["SPX500","NAS100","US30","US2000","DE30","UK100","FR40","EU50","JP225","HK33","AU200"]);
 function mktOf(u){if(u[1])return"crypto";const id=u[0];if(METALS.has(id))return"metal";if(COMMODITIES.has(id))return"commodity";if(INDICES.has(id))return"index";if(u[4]&&u[4]!==0&&u[4]!=="0")return"forex";return"stock"}
