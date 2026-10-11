@@ -29,6 +29,7 @@ button.p{background:linear-gradient(135deg,#2a8f5c,var(--g));border-color:transp
 button.p small{font-weight:500;opacity:.85;font-size:11.5px;background:rgba(0,0,0,.2);padding:1px 7px;border-radius:99px}
 button.ic{width:44px;padding:0;font-size:19px;display:grid;place-items:center}
 button.ic.on{border-color:var(--gb);color:var(--gb)}
+a.ic{width:44px;min-height:44px;display:grid;place-items:center;border:1px solid var(--bd);border-radius:var(--rs);background:var(--card);color:var(--tx);text-decoration:none;font-size:18px}
 .dot{width:9px;height:9px;border-radius:50%;background:var(--bd);transition:background .3s}.dot.on{background:var(--gb);box-shadow:0 0 0 4px var(--gd);animation:pl 1.6s ease-in-out infinite}
 /* controls */
 .ctl{margin-top:12px;display:flex;flex-direction:column;gap:10px}
@@ -135,7 +136,7 @@ a.btn.tv{border-color:#2962ff;background:#142a66}
 <body>
 <header class="bar">
   <div class="brand"><i>◈</i><div class="bt">Screener <small id="ver"></small></div></div>
-  <div class="acts"><span class="dot" id="dot" title="اسکن خودکار"></span><button class="p" id="go"><span id="goT">اسکن</span><small id="goC"></small></button><button class="ic" id="gs" aria-label="تنظیمات">⚙</button></div>
+  <div class="acts"><span class="dot" id="dot" title="اسکن خودکار"></span><button class="p" id="go"><span id="goT">اسکن</span><small id="goC"></small></button><a class="ic" href="backtest.html" aria-label="بک‌تست" title="بک‌تست">📊</a><button class="ic" id="gs" aria-label="تنظیمات">⚙</button></div>
 </header>
 <section class="ctl">
   <select id="mode" aria-label="استراتژی">
@@ -176,9 +177,9 @@ a.btn.tv{border-color:#2962ff;background:#142a66}
   <div id="cw"><canvas id="cv"></canvas></div>
   <div id="ci"></div>
 </div>
-<script src="symbols.js?v=25"></script><script src="engine.js?v=25"></script><script src="chart.js?v=25"></script>
+<script src="symbols.js?v=27"></script><script src="engine.js?v=27"></script><script src="chart.js?v=27"></script>
 <script>
-const BUILD=25,MISS=[typeof U==="undefined"?"symbols.js":0,typeof evalFvg==="undefined"?"engine.js":0,typeof drawChart==="undefined"?"chart.js":0].filter(Boolean);
+const BUILD=27,MISS=[typeof U==="undefined"?"symbols.js":0,typeof evalFvg==="undefined"?"engine.js":0,typeof drawChart==="undefined"?"chart.js":0].filter(Boolean);
 const MKT_LABEL={crypto:"کریپتو",forex:"فارکس",metal:"فلزات",commodity:"کالا",index:"شاخص",stock:"سهام"};
 const METALS=new Set(["XAUUSD","XAGUSD","XCUUSD"]),COMMODITIES=new Set(["WTICO","BRENT","NATGAS","CORN","WHEAT","SOYBEAN","SUGAR"]),INDICES=new Set(["SPX500","NAS100","US30","US2000","DE30","UK100","FR40","EU50","JP225","HK33","AU200"]);
 function mktOf(u){if(u[1])return"crypto";const id=u[0];if(METALS.has(id))return"metal";if(COMMODITIES.has(id))return"commodity";if(INDICES.has(id))return"index";if(u[4]&&u[4]!==0&&u[4]!=="0")return"forex";return"stock"}
