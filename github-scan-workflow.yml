@@ -33,3 +33,4 @@ jobs:
           OANDA_TOKEN: ${{ secrets.OANDA_TOKEN }}
           TEST: ${{ inputs.test && '1' || '0' }}
           LOOP_SECONDS: "270"
+          MODES: ${{ vars.MODES }}

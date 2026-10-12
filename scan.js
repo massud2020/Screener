@@ -2,7 +2,9 @@
 const fs=require("fs"),{evaluate,dropForming}=require("./engine.js"),{U}=require("./symbols.js");
 const TOPIC=process.env.NTFY_TOPIC,TOK=process.env.OANDA_TOKEN,ENV=process.env.OANDA_ENV||"practice";
 const F15=process.env.M15!=="0",FH1=process.env.H1!=="0",STRICT=process.env.H1_STRICT==="1";
-const MODES=(process.env.MODES||"pullback,pattern,fvg").split(",");
+const MODES=(process.env.MODES||"pullback,pattern,fvg").split(",").map(x=>x.trim()).filter(Boolean);
+// ntfy-config.json (edited from the app) can switch strategies off: {"strategies":{"pullback":true,"pattern":false,"fvg":true}}
+function enabledModes(){let m=MODES;try{const c=JSON.parse(fs.readFileSync("ntfy-config.json","utf8"));if(c&&c.strategies&&typeof c.strategies==="object")m=m.filter(x=>c.strategies[x]!==false)}catch(e){}return m}
 const NAME={pullback:"پولبک EMA",pattern:"الگوی ۳+۱",fvg:"Daily Open + Sweep + MSS + FVG"},MAXAGE=1200,SF=".state/sent.json";
 async function J(url,o={}){const r=await fetch(url,{...o,signal:AbortSignal.timeout(15000)});if(!r.ok)throw new Error("HTTP "+r.status);return r.json()}
 const okx=async(id,bar)=>{const j=await J(`https://www.okx.com/api/v5/market/candles?instId=${id}&bar=${bar}&limit=300`);if(j.code!=="0")return[];return j.data.map(r=>({time:+r[0]/1000,open:+r[1],high:+r[2],low:+r[3],close:+r[4]})).sort((a,b)=>a.time-b.time)};
@@ -16,13 +18,14 @@ return[a,h]}
 async function notify(title,message,priority=5,tags=["chart_with_upwards_trend"]){const r=await fetch("https://ntfy.sh/",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({topic:TOPIC,title,message,priority,tags}),signal:AbortSignal.timeout(15000)});if(!r.ok)throw new Error("ntfy "+r.status)}
 const LOOP=+(process.env.LOOP_SECONDS||0),IV=+(process.env.INTERVAL||60)*1000,sleep=ms=>new Promise(r=>setTimeout(r,ms));
 async function once(sent){
+const modes=enabledModes();if(!modes.length){console.log(`${new Date().toISOString()} all strategies are muted in ntfy-config.json - skipping scan`);return}
 const now=Date.now()/1000;for(const k of Object.keys(sent))if(now-sent[k]>86400)delete sent[k];
 const found=[];let i=0,errs=0;
 await Promise.all(Array.from({length:6},async()=>{while(i<U.length){const u=U[i++];try{const[a,h]=await load(u);if(a.length<50){errs++;continue}
 const cl=dropForming(a,300,now);if(!cl.length)continue;const bt=cl[cl.length-1].time,age=now-(bt+300);if(age>MAXAGE)continue;
-for(const mode of MODES){const r=evaluate(u[0],a,h,{mode,m15:F15,h1:FH1,h1Strict:STRICT},now);if(r.side)found.push({u,mode,r,bt,age,key:`${u[0]}|${mode}|${r.side}|${bt}`})}}catch(e){errs++}}}));
+for(const mode of modes){const r=evaluate(u[0],a,h,{mode,m15:F15,h1:FH1,h1Strict:STRICT},now);if(r.side)found.push({u,mode,r,bt,age,key:`${u[0]}|${mode}|${r.side}|${bt}`})}}catch(e){errs++}}}));
 const fresh=found.filter(f=>!sent[f.key]).sort((a,b)=>a.u[0].localeCompare(b.u[0]));
-console.log(`${new Date().toISOString()} symbols ${U.length}, errors ${errs}, signals ${found.length}, new ${fresh.length}`);
+console.log(`${new Date().toISOString()} modes ${modes.join("+")}, symbols ${U.length}, errors ${errs}, signals ${found.length}, new ${fresh.length}`);
 let n=0;for(const f of fresh){if(n>=10)break;const{u,mode,r}=f,L=r.side==="LONG",d=u[3];
 try{await notify(`${L?"🟢 LONG":"🔴 SHORT"} ${u[0]}`,`${NAME[mode]}\nEntry ${r.entry.toFixed(d)} | SL ${r.sl.toFixed(d)}${r.tp!=null?` | TP ${r.tp.toFixed(d)}`:""}\nRSI ${r.rsi.toFixed(1)} | کندل ${Math.max(0,Math.round(f.age/60))} دقیقه پیش بسته شد\n${r.tp!=null?"RR "+r.rr.toFixed(1):"خروج: اولین واگرایی RSI"}`,5,[L?"green_circle":"red_circle","chart_with_upwards_trend"]);sent[f.key]=now;n++}catch(e){console.error("notify failed",e.message)}}
 if(fresh.length>10){try{await notify("سیگنال‌های بیشتر",`${fresh.length-10} سیگنال دیگر هم هست؛ اپ را باز کنید.`,3,["information_source"]);for(const f of fresh.slice(10))sent[f.key]=now}catch(e){}}

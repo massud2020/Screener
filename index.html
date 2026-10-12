@@ -21,15 +21,15 @@ button:focus-visible,select:focus-visible,.row:focus-visible,a:focus-visible{out
 /* app bar */
 .bar{position:sticky;top:0;z-index:30;margin:0 -14px;padding:calc(env(safe-area-inset-top) + 8px) 14px 8px;display:flex;align-items:center;justify-content:space-between;gap:10px;background:rgba(11,13,17,.88);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--bd2)}
 .bar::after{content:"";position:absolute;bottom:-1px;inset-inline-start:0;height:2px;width:var(--prog,0%);background:linear-gradient(90deg,var(--g),var(--gb));transition:width .3s}
-.brand{display:flex;align-items:center;gap:9px;font-weight:700;font-size:16px}
-.brand i{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:linear-gradient(135deg,#1f6f47,var(--gb));color:#06150d;font-style:normal;font-size:16px}
+.brand{display:flex;align-items:center;gap:7px;font-weight:700;font-size:15px;min-width:0}
+.brand i{flex:none;width:28px;height:28px;border-radius:9px;display:grid;place-items:center;background:linear-gradient(135deg,#1f6f47,var(--gb));color:#06150d;font-style:normal;font-size:16px}
 .bt{white-space:nowrap}.brand small{color:var(--mu);font-size:11px;font-weight:500}
-.acts{display:flex;align-items:center;gap:8px}
-button.p{background:linear-gradient(135deg,#2a8f5c,var(--g));border-color:transparent;color:#fff;font-weight:700;min-width:96px;display:inline-flex;align-items:center;justify-content:center;gap:7px;box-shadow:0 2px 14px rgba(47,157,104,.3)}
+.acts{display:flex;align-items:center;gap:6px;flex:none}
+button.p{background:linear-gradient(135deg,#2a8f5c,var(--g));border-color:transparent;color:#fff;font-weight:700;min-width:84px;padding:0 11px;display:inline-flex;align-items:center;justify-content:center;gap:7px;box-shadow:0 2px 14px rgba(47,157,104,.3)}
 button.p small{font-weight:500;opacity:.85;font-size:11.5px;background:rgba(0,0,0,.2);padding:1px 7px;border-radius:99px}
-button.ic{width:44px;padding:0;font-size:19px;display:grid;place-items:center}
+button.ic{width:40px;min-width:40px;padding:0;font-size:18px;display:grid;place-items:center}
 button.ic.on{border-color:var(--gb);color:var(--gb)}
-a.ic{width:44px;min-height:44px;display:grid;place-items:center;border:1px solid var(--bd);border-radius:var(--rs);background:var(--card);color:var(--tx);text-decoration:none;font-size:18px}
+a.ic{width:40px;min-width:40px;min-height:44px;display:grid;place-items:center;border:1px solid var(--bd);border-radius:var(--rs);background:var(--card);color:var(--tx);text-decoration:none;font-size:18px}
 .dot{width:9px;height:9px;border-radius:50%;background:var(--bd);transition:background .3s}.dot.on{background:var(--gb);box-shadow:0 0 0 4px var(--gd);animation:pl 1.6s ease-in-out infinite}
 /* controls */
 .ctl{margin-top:12px;display:flex;flex-direction:column;gap:10px}
@@ -50,9 +50,13 @@ a.ic{width:44px;min-height:44px;display:grid;place-items:center;border:1px solid
 .set input[type=checkbox]{-webkit-appearance:none;appearance:none;flex:none;width:44px;height:26px;border-radius:99px;background:#2a2e37;position:relative;cursor:pointer;transition:background .2s}
 .set input[type=checkbox]::after{content:"";position:absolute;top:3px;inset-inline-start:3px;width:20px;height:20px;border-radius:50%;background:#cfd3da;transition:inset-inline-start .2s,background .2s}
 .set input[type=checkbox]:checked{background:var(--g)}.set input[type=checkbox]:checked::after{inset-inline-start:21px;background:#fff}
-.set input[type=password],.set input#ex{width:54%;direction:ltr;background:var(--bg);color:var(--tx);border:1px solid var(--bd);border-radius:10px;padding:0 11px;min-height:38px;font:inherit;font-size:13px}
+.set input[type=password],.set input#ex,.set input#ghr{width:54%;direction:ltr;background:var(--bg);color:var(--tx);border:1px solid var(--bd);border-radius:10px;padding:0 11px;min-height:38px;font:inherit;font-size:13px}
 .set select{min-height:38px;font-size:13px;padding:0 12px}
 .set #nt{min-height:38px;font-size:13px;padding:0 14px}
+.nout{display:none;margin:8px 0 6px;font-size:12.5px;color:var(--tx2);line-height:1.9}.nout.on{display:block}.nout.err{color:var(--rb)}.nout.ok{color:var(--gb)}
+.nout pre{direction:ltr;text-align:left;background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:10px;font-size:12px;white-space:pre-wrap;user-select:all;margin:6px 0}
+.nout a{color:var(--gb);margin-inline-end:12px}.nout button{min-height:34px;font-size:12.5px;padding:0 12px}
+.set details{border-top:1px solid var(--bd2);padding:2px 0}.set summary{cursor:pointer;min-height:44px;display:flex;align-items:center;color:var(--tx2);font-size:13.5px}.set details p{font-size:12.5px;color:var(--mu);line-height:1.9;margin-bottom:8px}
 /* loader */
 .ld{display:none;align-items:center;gap:16px;background:linear-gradient(135deg,#0d1612,var(--card));border:1px solid #1e3a2c;border-radius:var(--rad);padding:14px 16px;margin-top:12px;box-shadow:0 0 32px rgba(61,202,133,.06)}.ld.on{display:flex}
 .rd{width:52px;height:52px;border-radius:50%;position:relative;flex:none;overflow:hidden;border:1px solid #2a5a3f;background:radial-gradient(circle,var(--gb) 0 2px,transparent 3px),repeating-radial-gradient(circle,#1a3a29 0 1px,transparent 1px 12px),#0a110d}
@@ -163,6 +167,15 @@ a.btn.tv{border-color:#2962ff;background:#142a66}
   <label><span>اعلان سیستمی و صدا</span><button id="nt">فعال‌سازی</button></label>
   <label><span>اعلام صوتی نام نماد</span><input type="checkbox" id="sp" checked></label>
   <label><span>اسکن خودکار<small>هر ۶۰ ثانیه</small></span><input type="checkbox" id="auto"></label>
+  <h3>اعلان‌های ntfy · وقتی اپ بسته است</h3>
+  <label><span>پولبک EMA</span><input type="checkbox" id="nP" checked></label>
+  <label><span>الگوی ۳+۱</span><input type="checkbox" id="nN" checked></label>
+  <label><span>Daily Open + Sweep + MSS + FVG</span><input type="checkbox" id="nF" checked></label>
+  <label><span>ریپازیتوری GitHub<small>به شکل نام‌کاربری/نام‌ریپو</small></span><input id="ghr" placeholder="user/repo" autocomplete="off"></label>
+  <label><span>GitHub token<small>اختیاری · برای ذخیره‌ی خودکار</small></span><input type="password" id="ght" placeholder="github_pat_…" autocomplete="off"></label>
+  <label><span id="nHint">تغییر کلیدها فقط بعد از ذخیره اعمال می‌شه</span><button id="nSave">ذخیره روی سرور</button></label>
+  <div class="nout" id="nOut"></div>
+  <details><summary>راهنمای ساخت token</summary><p>در GitHub: Settings ‹ Developer settings ‹ Personal access tokens ‹ Fine-grained tokens ‹ Generate. فقط همین ریپو رو انتخاب کن و در Permissions مقدار <b>Contents</b> رو روی <b>Read and write</b> بذار. token فقط روی همین گوشی ذخیره می‌شه. بدون token هم می‌شه: دکمه‌ی ذخیره، متن تنظیمات رو برای کپی و گذاشتن توی GitHub نشون می‌ده.</p></details>
 </div>
 <div class="ld" id="ld"><div class="rd"><i></i></div><div class="lt"><b id="lp">۰ / ۰</b><span id="ls">در حال دریافت داده…</span><div class="pb"><u id="lb"></u></div></div></div>
 <div class="bn" id="bn"></div>
@@ -177,9 +190,9 @@ a.btn.tv{border-color:#2962ff;background:#142a66}
   <div id="cw"><canvas id="cv"></canvas></div>
   <div id="ci"></div>
 </div>
-<script src="symbols.js?v=29"></script><script src="engine.js?v=29"></script><script src="chart.js?v=29"></script>
+<script src="symbols.js?v=30"></script><script src="engine.js?v=30"></script><script src="chart.js?v=30"></script>
 <script>
-const BUILD=29,MISS=[typeof U==="undefined"?"symbols.js":0,typeof evalFvg==="undefined"?"engine.js":0,typeof drawChart==="undefined"?"chart.js":0].filter(Boolean);
+const BUILD=30,MISS=[typeof U==="undefined"?"symbols.js":0,typeof evalFvg==="undefined"?"engine.js":0,typeof drawChart==="undefined"?"chart.js":0].filter(Boolean);
 const MKT_LABEL={crypto:"کریپتو",forex:"فارکس",metal:"فلزات",commodity:"کالا",index:"شاخص",stock:"سهام"};
 const METALS=new Set(["XAUUSD","XAGUSD","XCUUSD"]),COMMODITIES=new Set(["WTICO","BRENT","NATGAS","CORN","WHEAT","SOYBEAN","SUGAR"]),INDICES=new Set(["SPX500","NAS100","US30","US2000","DE30","UK100","FR40","EU50","JP225","HK33","AU200"]);
 function mktOf(u){if(u[1])return"crypto";const id=u[0];if(METALS.has(id))return"metal";if(COMMODITIES.has(id))return"commodity";if(INDICES.has(id))return"index";if(u[4]&&u[4]!==0&&u[4]!=="0")return"forex";return"stock"}
@@ -266,6 +279,30 @@ if("serviceWorker"in navigator){const hadCtl=!!navigator.serviceWorker.controlle
 navigator.serviceWorker.register("sw.js").then(g=>{g.update();document.addEventListener("visibilitychange",()=>{if(!document.hidden)g.update()})}).catch(()=>{});
 navigator.serviceWorker.addEventListener("controllerchange",()=>{if(rl||!hadCtl)return;rl=true;location.reload()})}
 $("upd").onclick=async()=>{$("upd").textContent="در حال پاک‌سازی…";try{const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(g=>g.unregister()));const ks=await caches.keys();await Promise.all(ks.map(k=>caches.delete(k)))}catch(e){}location.href=location.pathname+"?r="+Date.now()};
+/* ---- ntfy per-strategy switches (stored in repo file ntfy-config.json, read by the GitHub Action) ---- */
+const NM=[["pullback","nP"],["pattern","nN"],["fvg","nF"]];
+const repoGuess=()=>{const hn=location.hostname,p=location.pathname.split("/").filter(Boolean);if(/\.github\.io$/.test(hn)){const o=hn.split(".")[0];return p.length&&!/\.[a-z]+$/i.test(p[0])?o+"/"+p[0]:o+"/"+hn}return""};
+const nCfg=()=>{const st={};NM.forEach(([m,id])=>st[m]=$(id).checked);return{strategies:st}};
+const nShow=(html,cls="")=>{const o=$("nOut");o.className="nout on "+cls;o.innerHTML=html};
+function nManual(text,repo,why){const q=encodeURIComponent(text),r=/^[\w.-]+\/[\w.-]+$/.test(repo)?repo:"OWNER/REPO";
+nShow((why?why+"<br>":"")+`این متن رو توی فایل <b dir="ltr">ntfy-config.json</b> بذار:<pre id="nJ">${text.replace(/</g,"&lt;")}</pre><button id="nCopy">کپی متن</button> <a href="https://github.com/${r}/new/main?filename=ntfy-config.json&value=${q}" target="_blank" rel="noopener">ساخت فایل در GitHub</a><a href="https://github.com/${r}/edit/main/ntfy-config.json" target="_blank" rel="noopener">ویرایش فایل موجود</a>`,why?"err":"");
+$("nCopy").onclick=async()=>{try{await navigator.clipboard.writeText(text)}catch(e){const t=document.createElement("textarea");t.value=text;document.body.appendChild(t);t.select();try{document.execCommand("copy")}catch(x){}t.remove()}$("nCopy").textContent="کپی شد ✓"}}
+async function nLoad(){try{let c=null;const tok=LS("bs_ght"),repo=($("ghr").value||"").trim();
+if(tok&&/^[\w.-]+\/[\w.-]+$/.test(repo)){try{const r=await fetch(`https://api.github.com/repos/${repo}/contents/ntfy-config.json`,{headers:{Authorization:"Bearer "+tok,Accept:"application/vnd.github+json"},cache:"no-store"});if(r.ok){const j=await r.json();c=JSON.parse(atob(String(j.content).replace(/\s/g,"")))}}catch(e){}}
+if(!c){const r=await fetch("ntfy-config.json?"+Date.now(),{cache:"no-store"});if(r.ok)c=await r.json()}
+if(c&&c.strategies)NM.forEach(([m,id])=>{if(m in c.strategies)$(id).checked=!!c.strategies[m]})}catch(e){}}
+async function nSave(){const cfg=nCfg(),text=JSON.stringify(cfg,null,2)+"\n",tok=($("ght").value||"").trim(),repo=($("ghr").value||"").trim();LS("bs_ght",tok);LS("bs_ghr",repo);NM.forEach(([m,id])=>LS("bs_n_"+m,$(id).checked));
+if(!tok||!/^[\w.-]+\/[\w.-]+$/.test(repo)){nManual(text,repo,tok?"آدرس ریپو درست نیست (مثل user/repo).":"");return}
+$("nSave").disabled=true;nShow("در حال ذخیره روی GitHub…");
+try{const api=`https://api.github.com/repos/${repo}/contents/ntfy-config.json`,HD={Authorization:"Bearer "+tok,Accept:"application/vnd.github+json","Content-Type":"application/json"};let sha;
+const g=await fetch(api,{headers:HD,cache:"no-store"});if(g.ok)sha=(await g.json()).sha;else if(g.status!==404)throw new Error(g.status===401?"token نامعتبر است":g.status===403?"token مجوز Contents: Read and write ندارد":"خطای "+g.status);
+const p=await fetch(api,{method:"PUT",headers:HD,body:JSON.stringify({message:"ntfy: update strategy switches",content:btoa(text),...(sha?{sha}:{})})});
+if(!p.ok)throw new Error(p.status===401?"token نامعتبر است":p.status===403||p.status===404?"دسترسی به این ریپو ممکن نیست (نام ریپو یا مجوز token رو چک کن)":p.status===409||p.status===422?"تداخل نسخه؛ یک بار دیگر ذخیره کن":"خطای "+p.status);
+nShow("✓ ذخیره شد. از اجرای بعدی اسکن پس‌زمینه (حداکثر چند دقیقه) اعمال می‌شه.","ok")}
+catch(e){nManual(text,repo,"⚠ ذخیره‌ی خودکار انجام نشد: "+(e&&e.message||"خطا"))}
+$("nSave").disabled=false}
+$("ghr").value=LS("bs_ghr")||repoGuess();$("ght").value=LS("bs_ght")||"";NM.forEach(([m,id])=>{const v=LS("bs_n_"+m);if(v!=null)$(id).checked=v==="true";$(id).onchange=()=>{$("nHint").textContent="تغییر ذخیره نشده - «ذخیره روی سرور» را بزن"}});
+$("nSave").onclick=nSave;nLoad();
 $("ver").textContent="v"+BUILD;$("verl").textContent="نسخه‌ی فعلی: v"+BUILD;
 if(MISS.length){$("list").innerHTML="";$("st").innerHTML='<span style="color:#ff6b6b">⚠ این فایل‌ها قدیمی یا آپلودنشده‌اند: '+MISS.join("، ")+' — آپلود کنید و چند بار رفرش کنید</span>'}else{renderChips();scan()}
 </script></body></html>
