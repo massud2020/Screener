@@ -89,4 +89,55 @@ for(let q=i+1;q<m5.length;q++){const c=m5[q],hs=d?c.high>=sl:c.low<=sl,ht=d?c.lo
 out.push({time:m5[i].time,side:d?"SHORT":"LONG",entry,sl,tp:done?px:tp,t2:done?t2:undefined});free=done?t2:Infinity;break}}
 return out}
 
-if(typeof module!=="undefined")module.exports={dropForming,marks,fvgPrep,fvgAt,divExit,evaluate,ema,rsi,atr,resample,checkPattern,checkPullback};
+
+// ---- Visual analysis: the same conditions evaluate()/evalFvg() use, returned as a checklist for the UI ----
+function fvgStage(X,i,P){const c=X.c,R={stage:0};if(i<30||i>=c.length)return R;const k=lci(X.h1,3600,c[i].time+300);if(k<10||biasAt(X,k)!==1)return R;R.stage=1;const aI=X.atr[i];if(aI==null)return R;
+const upd=cur=>{if(cur.stage>R.stage||(cur.stage===R.stage&&R.s==null)){Object.assign(R,cur)}};
+for(let s=i-2;s>=Math.max(4,i-P.maxAge);s--){const cs=c[s];if(P.needDO&&!(cs.low<X.DO[s]))continue;
+let L=null;for(let p=s-4;p>=Math.max(3,s-60);p--)if(X.PL3[p]&&c[p].low>cs.low&&c[p].low<cs.close){L=c[p].low;break}if(L==null)continue;
+let lower=false;for(let q=s+1;q<=i;q++)if(c[q].low<=cs.low){lower=true;break}if(lower)continue;
+const cur={stage:2,s,lvl:L,sweepT:cs.time,sweepExt:cs.low};
+let M=null;for(let p=s-2;p>=Math.max(2,s-40);p--)if(X.PH2[p]){M=c[p].high;break}if(M==null){upd(cur);continue}
+let m=-1;for(let q=s+1;q<=i-1;q++){const cq=c[q],a=X.atr[q];if(a==null)continue;if(cq.close>M&&cq.close>cq.open&&cq.close-cq.open>=P.disp*a){m=q;break}}if(m<0){upd(cur);continue}
+cur.stage=3;cur.mssLvl=M;cur.mssT=c[m].time;
+let f=-1,lo=0,hi=0;for(let j=m;j>=s+1;j--){if(j+2>i)continue;const c1=c[j-1],c2=c[j],c3=c[j+1];if(c3.low>c1.high&&c2.close>c2.open&&c3.low-c1.high>=P.minGap*aI){f=j;lo=c1.high;hi=c3.low;break}}if(f<0){upd(cur);continue}
+cur.stage=4;cur.fvg={lo,hi};
+let bad=false;for(let q=f+2;q<i;q++)if(c[q].close<lo||(P.firstTap&&c[q].low<=hi)){bad=true;break}if(bad){cur.invalid=true;upd(cur);continue}
+const ci=c[i];cur.tap=ci.low<=hi;cur.hold=ci.close>=lo;cur.green=ci.close>ci.open;if(cur.tap&&cur.hold&&cur.green&&ci.close>cs.low-.1*aI)cur.stage=5;upd(cur)}
+return R}
+function explainFvg(out,m5,h1,S){if(m5.length<260||h1.length<210){out.err="تاریخچه برای این استراتژی کافی نیست";return out}
+const i=m5.length-1,dg=S.dg==null?5:S.dg,f=v=>Number(v).toFixed(dg);let X=fvgPrep(m5,h1,false);const k=lci(X.h1,3600,m5[i].time+300);let b=k>=10?biasAt(X,k):0,mirror=false;
+if(b===-1){X=fvgPrep(m5,h1,true);mirror=true}
+const g=mirror?-1:1,R=fvgStage(X,i,FP);out.pipeline=true;out.dir=mirror?"SHORT":"LONG";out.price=m5[i].close;out.rsi=last(rsi(m5.map(c=>c.close),S.rsiP));out.atr=last(atr(m5,S.atrP));out.do=g*X.DO[i];
+const add=(label,ok,txt)=>{out.checks.push({label,ok:!!ok,txt});out.total++;if(ok)out.pass++};const inv=!!R.invalid;
+add("بایاس H1",R.stage>=1,R.stage>=1?(mirror?"نزولی":"صعودی"):"نامشخص");
+add("Sweep",R.stage>=2,R.stage>=2?f(g*R.sweepExt):"—");
+add("MSS",R.stage>=3,R.stage>=3?f(g*R.mssLvl):"—");
+add("FVG",R.stage>=4&&!inv,R.stage>=4?(inv?"باطل شد":(mirror?f(-R.fvg.hi)+"–"+f(-R.fvg.lo):f(R.fvg.lo)+"–"+f(R.fvg.hi))):"—");
+add("ورود",R.stage>=5,R.stage>=5?"کندل واکنش ✓":R.stage===4&&!inv?(R.tap?"لمس شد، واکنش نه":"منتظر برگشت به FVG"):"—");
+return out}
+function explain(id,raw5,rawH1,S,now=Date.now()/1000){S={...DEF,...S};const m5=dropForming(raw5,300,now),h1=dropForming(rawH1,3600,now),out={id,mode:S.mode,checks:[],pass:0,total:0,dir:null,err:null};
+if(S.mode==="fvg")return explainFvg(out,m5,h1,S);
+if(m5.length<S.es+3){out.err="تاریخچه M5 کافی نیست";return out}
+const cl=m5.map(c=>c.close),efA=ema(cl,S.ef),emA=ema(cl,S.em),esA=ema(cl,S.es),rA=rsi(cl,S.rsiP),aA=atr(m5,S.atrP),dg=S.dg==null?5:S.dg;
+const ef=last(efA),em=last(emA),es=last(esA),r=last(rA),a=last(aA),efp=last(efA,1),emp=last(emA,1);
+if([ef,em,es,r,a,efp,emp].some(x=>x==null)){out.err="اندیکاتورها آماده نیست";return out}
+const i=m5.length-1,b=m5[i],sc=b.close,D=sc>=es?"LONG":"SHORT",L=D==="LONG",pb=S.mode==="pullback",sl=(ef-efp)!==0&&(em-emp)!==0;
+out.dir=D;out.price=sc;out.rsi=r;out.atr=a;out.ef=ef;out.em=em;out.es=es;
+const add=(k,label,ok,txt,viz)=>{out.checks.push({k,label,ok:!!ok,txt,viz});out.total++;if(ok)out.pass++};
+add("trend",`قیمت ${L?"بالای":"پایین"} EMA${S.es} و شیب EMA`,(L?sc>es:sc<es)&&sl,((sc-es)/a>=0?"+":"")+((sc-es)/a).toFixed(1)+"×ATR",{t:"dist",v:(sc-es)/a});
+if(pb){const lb=S.lookback,tch=[];let t=false,lo=b.low,hi=b.high;for(let j=Math.max(0,i-lb);j<i;j++){const e=efA[j],c=m5[j];lo=Math.min(lo,c.low);hi=Math.max(hi,c.high);if(e==null){tch.push(false);continue}const hit=L?c.low<=e:c.high>=e;tch.push(hit);if(hit)t=true}
+add("touch",`لمس EMA${S.ef} در ${lb} کندل اخیر`,t,t?"بله":"خیر",{t:"touch",bars:tch});
+add("close",`بسته‌شدن ${L?"بالای":"پایین"} EMA${S.ef}`,L?b.close>ef:b.close<ef,((sc-ef)/a>=0?"+":"")+((sc-ef)/a).toFixed(2)+"×ATR",{t:"dist",v:(sc-ef)/a});
+add("candle",`کندل ${L?"صعودی":"نزولی"}`,L?b.close>=b.open:b.close<=b.open,L?"close ≥ open":"close ≤ open");
+const d=Math.abs(sc-(L?lo:hi));out.slEst=d>0?d:(b.high-b.low)*2}
+else{const pat=m5.slice(-4).reverse(),pl=checkPattern(pat,"LONG",S.minRatio),ps=checkPattern(pat,"SHORT",S.minRatio),nc=ef!==em&&efp!==emp&&((ef>em&&efp>emp)||(ef<em&&efp<emp)),pp=L?pl:ps;
+add("emax",`EMA${S.ef} ${L?"بالای":"پایین"} EMA${S.em}`,L?ef>em:ef<em,((ef-em)/a>=0?"+":"")+((ef-em)/a).toFixed(2)+"×ATR",{t:"dist",v:(ef-em)/a});
+add("nc","هم‌جهتی دو کندل اخیر (بدون تقاطع)",nc,nc?"بله":"خیر");
+add("pat","الگوی ۳+۱",pp.ok,"نسبت "+pp.ratio.toFixed(2)+" از "+S.minRatio,{t:"pat",c:pat.slice().reverse().map(c=>({o:c.open,h:c.high,l:c.low,c:c.close})),ratio:pp.ratio,th:S.minRatio,ok:pp.ok});
+out.slEst=(b.high-b.low)*2}
+if(S.m15){const m=dropForming(resample(m5,15),900,now);if(m.length<S.em+2)add("m15","فیلتر M15",false,"تاریخچه کم");else{const mc=m.map(c=>c.close),f=last(ema(mc,S.ef)),mm=last(ema(mc,S.em));add("m15",`M15: EMA${S.ef} ${L?"بالای":"پایین"} EMA${S.em}`,L?f>mm:f<mm,((f-mm)/a>=0?"+":"")+((f-mm)/a).toFixed(2)+"×ATR",{t:"dist",v:(f-mm)/a})}}
+if(S.h1){if(h1.length<S.es+2)add("h1","فیلتر H1",false,"تاریخچه کم");else{const hc=h1.map(c=>c.close),hs=last(ema(hc,S.es)),c=hc[hc.length-1];let ok;if(S.h1Strict){const f=last(ema(hc,S.ef)),m=last(ema(hc,S.em));ok=L?c>hs&&f>m&&m>hs:c<hs&&f<m&&m<hs}else ok=L?c>hs:c<hs;add("h1",`H1: قیمت ${L?"بالای":"پایین"} EMA${S.es}${S.h1Strict?" (سخت‌گیرانه)":""}`,ok,((c-hs)/a>=0?"+":"")+((c-hs)/a).toFixed(1)+"×ATR",{t:"dist",v:(c-hs)/a})}}
+return out}
+
+if(typeof module!=="undefined")module.exports={explain,dropForming,marks,fvgPrep,fvgAt,divExit,evaluate,ema,rsi,atr,resample,checkPattern,checkPullback};

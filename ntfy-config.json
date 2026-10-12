@@ -1,7 +1,7 @@
 {
   "strategies": {
-    "pullback": false,
+    "pullback": true,
     "pattern": true,
-    "fvg": false
+    "fvg": true
   }
 }
