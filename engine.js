@@ -48,7 +48,7 @@ function explain(id,raw5,rawH1,S,now=Date.now()/1000){S={...DEF,...S};const m5=d
 if(m5.length<S.es+3){out.err="تاریخچه M5 کافی نیست";return out}
 const cl=m5.map(c=>c.close),efA=ema(cl,S.ef),emA=ema(cl,S.em),esA=ema(cl,S.es),rA=rsi(cl,S.rsiP),aA=atr(m5,S.atrP),dg=S.dg==null?5:S.dg;
 const ef=last(efA),em=last(emA),es=last(esA),r=last(rA),a=last(aA),efp=last(efA,1),emp=last(emA,1);
-if([ef,em,es,r,a,efp,emp].some(x=>x==null)){out.err="اندیکاتورها آماده نیست";return out}
+if([ef,em,es,r,a,efp,emp].some(x==null)){out.err="اندیکاتورها آماده نیست";return out}
 const i=m5.length-1,b=m5[i],sc=b.close,D=sc>=es?"LONG":"SHORT",L=D==="LONG",sl=(ef-efp)!==0&&(em-emp)!==0;
 out.dir=D;out.price=sc;out.rsi=r;out.atr=a;out.ef=ef;out.em=em;out.es=es;
 const add=(k,label,ok,txt,viz)=>{out.checks.push({k,label,ok:!!ok,txt,viz});out.total++;if(ok)out.pass++};
