@@ -1,18 +1,18 @@
-const DEF={ef:21,em:50,es:200,rsiP:14,minRatio:.5,lookback:5,atrP:14,m15:true,h1:true,h1Strict:false};
-function decodeBuf(buf){const u=new Uint8Array(buf);let enc="utf-16le",s=2;
+// Backtest engine: MT5 CSV parser + walk-forward simulation using the same strategy logic as engine.js
+// Requires engine.js globals: DEF, ema, rsi, atr, resample, lci, checkPattern, divExit
+function decodeBuf(buf){const u=new Uint8Array(buf);let enc="utf-8",s=0;
 if(u[0]===0xFF&&u[1]===0xFE){enc="utf-16le";s=2}else if(u[0]===0xFE&&u[1]===0xFF){enc="utf-16be";s=2}
-else if(u[0]===0xEF&&u[1]===0xBB&&u[2]===0xBF){enc="utf-8";s=3}else if(u.length>3&&u[0]!==0&&u[1]===0&&u[2]!==0&&u[3]===0)enc="utf-16le";
-else{enc="utf-8";s=0}
+else if(u[0]===0xEF&&u[1]===0xBB&&u[2]===0xBF){s=3}else if(u.length>3&&u[0]!==0&&u[1]===0&&u[2]!==0&&u[3]===0)enc="utf-16le";
 return new TextDecoder(enc).decode(s?u.subarray(s):u)}
 function parseTS(d,t){const m=/^(\d{4})[.\-\/](\d{1,2})[.\-\/](\d{1,2})/.exec(d);if(!m)return NaN;let h=0,mi=0,se=0;
 if(t){const n=/(\d{1,2}):(\d{2})(?::(\d{2}))?/.exec(t);if(n){h=+n[1];mi=+n[2];se=+(n[3]||0)}}
 return Date.UTC(+m[1],+m[2]-1,+m[3],h,mi,se)/1000}
-function parseMT5(text){const lines=text.split(/\r?\n/).filter(l=>l.trim().length);if(lines.length<50)return{error:"فایل خیلی کوتاه است"};
+function parseMT5(text){const lines=text.split(/\r?\n/).filter(l=>l.trim().length);if(lines.length<50)return{error:"فایل خیلی کوتاه است (کمتر از ۵۰ ردیف)"};
 const l0=lines[0],cnt=c=>l0.split(c).length-1,delim=cnt("\t")>=Math.max(cnt(";"),cnt(","))&&cnt("\t")>0?"\t":cnt(";")>cnt(",")?";":",";
 const f0=l0.split(delim).map(x=>x.replace(/[<>"\s]/g,"").toLowerCase()),hasH=f0.some(x=>/^[a-z]+$/.test(x)&&["date","time","open","high","low","close","datetime","timestamp"].includes(x));
 let ix={d:0,t:1,o:2,h:3,l:4,c:5,dt:-1},start=0;
 if(hasH){start=1;const g=n=>f0.indexOf(n);ix={d:g("date"),t:g("time"),o:g("open"),h:g("high"),l:g("low"),c:g("close"),dt:Math.max(g("datetime"),g("timestamp"))};
-if(ix.d<0&&ix.dt<0&&ix.t>=0){ix.dt=ix.t;ix.t=-1}if(ix.o<0||ix.h<0||ix.l<0||ix.c<0)return{error:"ستون‌های قیمت پیدا نشد"}}
+if(ix.d<0&&ix.dt<0&&ix.t>=0){ix.dt=ix.t;ix.t=-1}if(ix.o<0||ix.h<0||ix.l<0||ix.c<0)return{error:"ستون‌های Open/High/Low/Close پیدا نشد"}}
 else{const p=l0.split(delim);if(/[ T]/.test(p[0].trim())){ix={d:-1,t:-1,o:1,h:2,l:3,c:4,dt:0}}}
 const n=lines.length-start,T=new Float64Array(n),O=new Float64Array(n),H=new Float64Array(n),L=new Float64Array(n),C=new Float64Array(n);let k=0,dg=0;
 for(let r=start;r<lines.length;r++){const p=lines[r].split(delim);let ts;
@@ -20,35 +20,38 @@ if(ix.dt>=0){const parts=(p[ix.dt]||"").trim().split(/[ T]/);ts=parseTS(parts[0]
 const o=+p[ix.o],h=+p[ix.h],l=+p[ix.l],c=+p[ix.c];if(!(ts>0)||!(o>0)||!(h>0)||!(l>0)||!(c>0)||h<l)continue;
 if(k<300){const s=(p[ix.o]||"").trim(),q=s.indexOf(".");if(q>=0)dg=Math.max(dg,s.length-q-1)}
 T[k]=ts;O[k]=o;H[k]=h;L[k]=l;C[k]=c;k++}
-if(k<50)return{error:"ردیف معتبر پیدا نشد"};
+if(k<50)return{error:"ردیف معتبر پیدا نشد؛ قالب فایل را بررسی کن"};
 let idx=Array.from({length:k},(_,i)=>i),sorted=true;for(let i=1;i<k;i++)if(T[i]<=T[i-1]){sorted=false;break}
 if(!sorted)idx.sort((a,b)=>T[a]-T[b]);
 const t=[],o=[],h=[],l=[],c=[];let prev=-1;for(const i of idx){if(T[i]===prev)continue;prev=T[i];t.push(T[i]);o.push(O[i]);h.push(H[i]);l.push(L[i]);c.push(C[i])}
 const ds=[];for(let i=1;i<Math.min(t.length,2000);i++)ds.push(t[i]-t[i-1]);ds.sort((a,b)=>a-b);const step=ds[ds.length>>1];
 let out={t,o,h,l,c,dg:Math.min(dg,6),step};
 if(step===60){const cs=t.map((x,i)=>({time:x,open:o[i],high:h[i],low:l[i],close:c[i]})),r=resample(cs,5);out={t:r.map(x=>x.time),o:r.map(x=>x.open),h:r.map(x=>x.high),l:r.map(x=>x.low),c:r.map(x=>x.close),dg:out.dg,step:300,from:"M1"}}
-else if(step!==300)return{error:"تایم‌فریم فایل M5 نیست"};
+else if(step!==300)return{error:"تایم‌فریم فایل M5 نیست (فاصله‌ی کندل‌ها "+step+" ثانیه است). از MT5 خروجی M5 یا M1 بگیر"};
 return out}
 function candlesOf(ds){const n=ds.t.length,o=new Array(n);for(let i=0;i<n;i++)o[i]={time:ds.t[i],open:ds.o[i],high:ds.h[i],low:ds.l[i],close:ds.c[i]};return o}
 function btPrep(m5,S){S={...DEF,...S};const cl=m5.map(c=>c.close),m15=resample(m5,15),h1=resample(m5,60),mc=m15.map(c=>c.close),hc=h1.map(c=>c.close);
 return{m5,S,efA:ema(cl,S.ef),emA:ema(cl,S.em),esA:ema(cl,S.es),rA:rsi(cl,S.rsiP),aA:atr(m5,S.atrP),m15,h1,mf:ema(mc,S.ef),mm:ema(mc,S.em),hf:ema(hc,S.ef),hm:ema(hc,S.em),hs:ema(hc,S.es)}}
-function btSignals(P,mode,lo,hi){const{m5,S,efA,emA,esA,m15,h1,mf,mm,hf,hm,hs}=P,out=[];
-for(let i=Math.max(lo,S.es+1,3);i<=hi;i++){const ef=efA[i],em=emA[i],es=esA[i],efp=efA[i-1],emp=emA[i-1];if([ef,em,es,efp,emp].some(x=>x==null))continue;
-const b=m5[i],l4=[b,m5[i-1],m5[i-2],m5[i-3]],pl=checkPattern(l4,"LONG",S.minRatio),ps=checkPattern(l4,"SHORT",S.minRatio);
+function btSignals(P,mode,lo,hi){mode=mode||"pattern";const{m5,S,efA,emA,esA,aA,m15,h1,mf,mm,hf,hm,hs}=P,out=[];
+
+for(let i=Math.max(lo,S.es+1,3);i<=hi;i++){const ef=efA[i],em=emA[i],es=esA[i],efp=efA[i-1],emp=emA[i-1],a=aA[i];if([ef,em,es,efp,emp,a].some(x=>x==null)||a<=0)continue;
+const b=m5[i];let L,Sh;
 const slope=(ef-efp)!==0&&(em-emp)!==0,ab=b.close>es,be=b.close<es;
-const nc=ef!==em&&efp!==emp&&((ef>em&&efp>emp)||(ef<em&&efp<emp));
-const L=ab&&ef>em&&nc&&slope&&pl.ok,Sh=be&&ef<em&&nc&&slope&&ps.ok;
+{const l4=[b,m5[i-1],m5[i-2],m5[i-3]],pl=checkPattern(l4,"LONG",S.minRatio),ps=checkPattern(l4,"SHORT",S.minRatio),nc=ef!==em&&efp!==emp&&((ef>em&&efp>emp)||(ef<em&&efp<emp));L=ab&&ef>em&&nc&&slope&&pl.ok;Sh=be&&ef<em&&nc&&slope&&ps.ok}
 if(!L&&!Sh)continue;
 let m15L=true,m15S=true;if(S.m15){const k=lci(m15,900,b.time+300),f=k>=0?mf[k]:null,m=k>=0?mm[k]:null;if(f==null||m==null)continue;m15L=f>m;m15S=f<m}
 let h1L=true,h1S=true;if(S.h1){const k=lci(h1,3600,b.time+300),s=k>=0?hs[k]:null;if(s==null)continue;const c=h1[k].close;if(S.h1Strict){const f=hf[k],m=hm[k];if(f==null||m==null)continue;h1L=c>s&&f>m&&m>s;h1S=c<s&&f<m&&m<s}else{h1L=c>s;h1S=c<s}}
 let side=null;if(L&&m15L&&h1L)side="LONG";if(Sh&&m15S&&h1S)side="SHORT";if(!side)continue;
-const sz=b.high-b.low;let d=sz*2;if(d<=0)d=sz*2;if(d<=0)continue;
+const sz=b.high-b.low,d=sz*2;if(d<=0)continue;
 out.push({i,side,entry:b.close,sl:side==="LONG"?b.close-d:b.close+d,tp:null})}
 return out}
+// Trade simulation. Entry at the signal bar close. SL is checked before TP on the same bar (conservative).
+// RSI-divergence exit is only known one bar after the pivot, so it exits at that later bar's close.
+// Market sessions: a gap of more than gapMin minutes between two consecutive bars means the market was closed.
 function sessInfo(m,gapMin){const n=m.length,start=new Int32Array(n),end=new Int32Array(n),gs=gapMin*60;let s=0,cnt=0;
 for(let i=1;i<=n;i++){if(i===n||m[i].time-m[i-1].time>gs){for(let j=s;j<i;j++){start[j]=s;end[j]=i-1}s=i;if(i<n)cnt++}}return{start,end,gaps:cnt}}
 function simTrade(P,s,O){const m=P.m5,L=s.side==="LONG",risk=Math.abs(s.entry-s.sl);if(!(risk>0))return null;let target=null,divIdx=-1;
-if(O.exit==="rr")target=L?s.entry+O.rr*risk:s.entry-O.rr*risk;else{const ex=divExit(m,P.rA,s.i,L);if(ex)divIdx=ex.i+1}
+if(O.exit==="rr")target=L?s.entry+O.rr*risk:s.entry-O.rr*risk;else if(s.tp!=null)target=s.tp;else{const ex=divExit(m,P.rA,s.i,L);if(ex)divIdx=ex.i+1}
 const MH=O.mh&&O.mh.gap&&O.mh.forceClose&&P.si?O.mh:null,se=MH?P.si.end[s.i]:-1,realClose=!!MH&&se<m.length-1;
 let end=Math.min(m.length-1,s.i+O.maxBars);if(realClose)end=Math.min(end,se);
 for(let q=s.i+1;q<=end;q++){const c=m[q];
