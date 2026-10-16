@@ -1,4 +1,15 @@
 {
-  "tz": "UTC",
-  "alerts": []
+  "tz": "Asia/Tehran",
+  "alerts": [
+    {
+      "id": "amvag83dm",
+      "sym": "XAUUSD",
+      "type": "every",
+      "on": true,
+      "every": 5,
+      "from": "06:00",
+      "to": "23:59"
+    }
+  ],
+  "updated": "2026-10-16T04:11:21.987Z"
 }
