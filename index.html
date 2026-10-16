@@ -84,6 +84,7 @@ a.ic{width:40px;min-width:40px;min-height:44px;display:grid;place-items:center;b
 .seg button.on{background:var(--card2);color:var(--tx);box-shadow:0 1px 6px rgba(0,0,0,.4)}
 .st{color:var(--mu);font-size:12px;margin-top:10px;min-height:18px}
 .st .link{min-height:0;padding:0;border:none;background:none;color:var(--gb);font-size:12px;text-decoration:underline}
+.hl{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.hl span{font-size:11.5px;padding:3px 10px;border-radius:99px;border:1px solid var(--bd2);color:var(--mu)}.hl .ok{color:var(--gb);border-color:rgba(70,197,140,.3)}.hl .part{color:#ffb020;border-color:rgba(255,176,32,.35)}.hl .bad{color:var(--rb);border-color:rgba(232,115,109,.4)}.hl .hint2{flex-basis:100%;font-size:11.5px;color:var(--mu);line-height:1.8}
 .el{direction:ltr;text-align:left;font-size:11.5px;color:var(--mu);margin-top:6px;line-height:1.6;display:none;word-break:break-word}.el.on{display:block}
 /* rows */
 main{padding-bottom:28px}
@@ -281,6 +282,7 @@ a.btn.tv{border-color:#2962ff;background:#142a66}
 <div class="bn" id="bn"></div>
 <div class="sum" id="sum" style="display:none"></div>
 <div class="st" id="st">آماده</div>
+<div class="hl" id="hl"></div>
 <div class="el" id="el"></div>
 <main id="list"><div class="sk"></div><div class="sk"></div><div class="sk"></div></main>
 <div id="ov">
@@ -291,9 +293,9 @@ a.btn.tv{border-color:#2962ff;background:#142a66}
   <div id="an"></div>
   <div id="ci"></div>
 </div>
-<script src="symbols.js?v=33"></script><script src="alerts.js?v=33"></script><script src="engine.js?v=33"></script><script src="chart.js?v=33"></script>
+<script src="symbols.js?v=34"></script><script src="alerts.js?v=34"></script><script src="engine.js?v=34"></script><script src="chart.js?v=34"></script>
 <script>
-const BUILD=33,MISS=[typeof U==="undefined"?"symbols.js":0,typeof AL==="undefined"?"alerts.js":0,typeof ENGINE_VER==="undefined"||ENGINE_VER<32?"engine.js":0,typeof drawChart==="undefined"?"chart.js":0].filter(Boolean);
+const BUILD=34,MISS=[typeof U==="undefined"?"symbols.js":0,typeof AL==="undefined"?"alerts.js":0,typeof ENGINE_VER==="undefined"||ENGINE_VER<32?"engine.js":0,typeof drawChart==="undefined"?"chart.js":0].filter(Boolean);
 const MKT_LABEL={crypto:"کریپتو",forex:"فارکس",metal:"فلزات",commodity:"کالا",index:"شاخص",stock:"سهام"};
 const METALS=new Set(["XAUUSD","XAGUSD","XCUUSD"]),COMMODITIES=new Set(["WTICO","BRENT","NATGAS","CORN","WHEAT","SOYBEAN","SUGAR"]),INDICES=new Set(["SPX500","NAS100","US30","US2000","DE30","UK100","FR40","EU50","JP225","HK33","AU200"]);
 function mktOf(u){if(u[1])return"crypto";const id=u[0];if(METALS.has(id))return"metal";if(COMMODITIES.has(id))return"commodity";if(INDICES.has(id))return"index";if(u[4]&&u[4]!==0&&u[4]!=="0")return"forex";return"stock"}
@@ -303,7 +305,7 @@ const extraList=()=>(LS("bs_ex")||"").split(/[ ,]+/).filter(Boolean);
 const selectedMkts=()=>[...document.querySelectorAll(".mkt.on")].map(e=>e.dataset.m);
 function renderChips(){const saved=LS("bs_mkts"),on=saved!=null?new Set(saved.split(",")):new Set(Object.keys(MKT_LABEL));
 $("mkts").innerHTML=Object.keys(MKT_LABEL).map(m=>`<button class="mkt${on.has(m)?" on":""}" data-m="${m}" aria-pressed="${on.has(m)}">${MKT_LABEL[m]} <span class="cnt">${fa(U.filter(u=>mktOf(u)===m).length+(m==="stock"?extraList().length:0))}</span></button>`).join("")+'<button class="mini" id="mAll">همه</button><button class="mini" id="mNone">هیچ</button>';updCnt()}
-function updCnt(){const sel=selectedMkts();$("goC").textContent=fa(U.filter(u=>sel.includes(mktOf(u))).length+(sel.includes("stock")?extraList().length:0))}
+function updCnt(){const sel=selectedMkts();$("goC").textContent=fa(U.filter(u=>sel.includes(mktOf(u))&&(u[1]||u[2]||(u[4]&&LS("bs_tok")))).length+(sel.includes("stock")?extraList().length:0))}
 function saveMk(){LS("bs_mkts",selectedMkts().join(","));updCnt()}
 $("mkts").onclick=e=>{const t=e.target.closest("button");if(!t)return;if(t.id==="mAll"||t.id==="mNone"){document.querySelectorAll(".mkt").forEach(x=>{x.classList.toggle("on",t.id==="mAll");x.setAttribute("aria-pressed",t.id==="mAll")})}else if(t.classList.contains("mkt")){t.classList.toggle("on");t.setAttribute("aria-pressed",t.classList.contains("on"))}saveMk()};
 const PROX=[u=>u,u=>"https://corsproxy.io/?url="+encodeURIComponent(u),u=>"https://api.allorigins.win/raw?url="+encodeURIComponent(u)];
@@ -318,28 +320,29 @@ if((a.length<210||h.length<210)&&u[2]){const[x,y]=await Promise.all([yh(u[2],"5m
 const S=()=>({mode:"pattern",m15:$("m15").checked,h1:$("h1").checked,h1Strict:$("h1s").checked});
 function setProg(p){document.documentElement.style.setProperty("--prog",p+"%")}
 async function scan(){if(busy)return;busy=true;$("go").disabled=true;$("goT").textContent="در حال اسکن";$("dot").classList.toggle("on",$("auto").checked);const sel=selectedMkts();
-const L=U.filter(u=>sel.includes(mktOf(u))).concat(sel.includes("stock")?extraList().map(t=>[t.toUpperCase(),0,t.toUpperCase(),2,0]):[]);
+const hasSrc=u=>u[1]||u[2]||(u[4]&&LS("bs_tok")),L=U.filter(u=>sel.includes(mktOf(u))&&hasSrc(u)).concat(sel.includes("stock")?extraList().map(t=>[t.toUpperCase(),0,t.toUpperCase(),2,0]):[]);
 const done=()=>{$("ld").classList.remove("on");setProg(0);busy=false;$("go").disabled=false;$("goT").textContent="اسکن"};
 if(!L.length){$("st").textContent="هیچ بازاری انتخاب نشده؛ از چیپ‌های بالا یکی را روشن کن";done();return}
-const rows=[],errs=[];let i=0,dn=0;const prog=n=>{const p=dn/L.length*100;$("lb").style.width=p+"%";setProg(p);$("lp").textContent=fa(dn)+" / "+fa(L.length);$("ls").textContent=n};$("ld").classList.add("on");prog("در حال دریافت داده…");
-await Promise.all(Array.from({length:5},async()=>{while(i<L.length){const u=L[i++];try{const[a,h]=await load(u);if(a.length<50)throw 0;D[u[0]]={id:u[0],a,h,dg:u[3],u};const cl=dropForming(a,300,Date.now()/1000),bt=cl.length?cl[cl.length-1].time:0,ms=["pattern"],rs=ms.map(m=>{const r=evaluate(u[0],a,h,{...S(),mode:m});r.d=u[3];r.mode=m;r.bt=bt;try{const e=explain(u[0],a,h,{...S(),mode:m,dg:u[3]},Date.now()/1000);r.pass=e.pass;r.total=e.total}catch(x){}return r}),sg=rs.filter(r=>r.side);(sg.length?sg:[rs[0]]).forEach(r=>rows.push(r))}catch(e){errs.push(u[0])}dn++;prog(u[0])}}));
+const rows=[],errs=[],cnt={};L.forEach(u=>{const m=mktOf(u);(cnt[m]=cnt[m]||{n:0,ok:0}).n++});let i=0,dn=0;const prog=n=>{const p=dn/L.length*100;$("lb").style.width=p+"%";setProg(p);$("lp").textContent=fa(dn)+" / "+fa(L.length);$("ls").textContent=n};$("ld").classList.add("on");prog("در حال دریافت داده…");
+await Promise.all(Array.from({length:5},async()=>{while(i<L.length){const u=L[i++];try{const[a,h]=await load(u);if(a.length<50)throw 0;cnt[mktOf(u)].ok++;D[u[0]]={id:u[0],a,h,dg:u[3],u};const cl=dropForming(a,300,Date.now()/1000),bt=cl.length?cl[cl.length-1].time:0,ms=["pattern"],rs=ms.map(m=>{const r=evaluate(u[0],a,h,{...S(),mode:m});r.d=u[3];r.mode=m;r.bt=bt;try{const e=explain(u[0],a,h,{...S(),mode:m,dg:u[3]},Date.now()/1000);r.pass=e.pass;r.total=e.total}catch(x){}return r}),sg=rs.filter(r=>r.side);(sg.length?sg:[rs[0]]).forEach(r=>rows.push(r))}catch(e){errs.push(u[0])}dn++;prog(u[0])}}));
 const rk=r=>r.side==="LONG"?0:r.side==="SHORT"?1:2;rows.sort((a,b)=>rk(a)-rk(b)||(a.side?0:(b.total?b.pass/b.total:0)-(a.total?a.pass/a.total:0))||a.id.localeCompare(b.id));
 const ns=Date.now()/1000;let seen={};try{seen=JSON.parse(LS("bs_seen")||"{}")}catch(e){}const fr=[];
 rows.forEach(r=>{if(!r.side)return;if(ns-(r.bt+300)>1200)return;const k=r.id+"|"+r.mode+"|"+r.side+"|"+r.bt;if(seen[k])return;seen[k]=ns;fr.push(r)});
 Object.keys(seen).forEach(k=>{if(ns-seen[k]>86400)delete seen[k]});LS("bs_seen",JSON.stringify(seen));window.__fresh=fr.length;if(fr.length)alertNow(fr);
-LAST={rows,errs,time:new Date()};renderList();done()}
+LAST={rows,errs,cnt,time:new Date()};renderList();done()}
 function age(r){if(!r.bt)return"";const m=Math.max(0,Math.round((Date.now()/1000-(r.bt+300))/60));return m>=90?"":m<1?"همین الان":fa(m)+" دقیقه پیش"}
 function sigHtml(r){const d=r.d,f=x=>x.toFixed(d),L=r.side==="LONG",risk=Math.abs(r.entry-r.sl)/r.entry*100,a=age(r),mk=MKT_LABEL[mktOf(D[r.id].u)];
 return`<article class="row sig ${r.side}" data-id="${r.id}" data-mode="${r.mode}" tabindex="0"><div class="r-head"><div class="r-id"><span class="sym">${r.id}</span><span class="tag mk">${mk}</span></div><span class="b ${r.side}">${L?"▲":"▼"} ${r.side}</span></div>
 <div class="r-grid"><div><i>Entry</i><b>${f(r.entry)}</b></div><div><i>SL</i><b class="neg">${f(r.sl)}</b></div><div><i>Exit</i><b class="pos">واگرایی RSI</b></div></div>
 <div class="r-foot"><span>ریسک <bdi>${risk.toFixed(2)}%</bdi></span><span><bdi dir="ltr">RSI ${r.rsi!=null?r.rsi.toFixed(0):"-"}</bdi></span>${a?`<span>${a}</span>`:""}</div></article>`}
 function noneHtml(r){return`<div class="row none" data-id="${r.id}" data-mode="${r.mode}" tabindex="0"><span class="sym">${r.id}</span><span class="why">${r.fail||""}</span>${r.total?`<span class="mini${r.pass/r.total>=.6?" hi":""}" title="شرایط برقرار"><u style="width:${r.pass/r.total*100}%"></u></span><span class="rs"><bdi dir="ltr">${r.pass}/${r.total}</bdi></span>`:""}</div>`}
-function renderList(){if(!LAST)return;const{rows,errs,time}=LAST,only=$("only").checked,all=rows.filter(r=>r.side),nl=all.filter(r=>r.side==="LONG").length,ns=all.length-nl,sg=all.filter(r=>vf==="all"||r.side===vf),no=rows.filter(r=>!r.side);
+function renderList(){if(!LAST)return;const{rows,errs,time,cnt}=LAST,only=$("only").checked,all=rows.filter(r=>r.side),nl=all.filter(r=>r.side==="LONG").length,ns=all.length-nl,sg=all.filter(r=>vf==="all"||r.side===vf),no=rows.filter(r=>!r.side);
 $("sum").style.display="flex";$("sum").innerHTML=`<div class="cn"><span class="l">▲ ${fa(nl)} لانگ</span><span class="s">▼ ${fa(ns)} شورت</span></div><div class="seg" role="tablist">${[["all","همه"],["LONG","لانگ"],["SHORT","شورت"]].map(([v,t])=>`<button data-v="${v}" class="${vf===v?"on":""}">${t}</button>`).join("")}</div>`;
 $("list").innerHTML=(sg.length?sg.map(sigHtml).join(""):`<div class="empty"><b>${all.length?"🔍":"🌙"}</b>${all.length?"سیگنالی با این فیلتر نیست":"فعلاً سیگنالی نیست<br>اسکن خودکار ادامه دارد"}</div>`)+(!only&&no.length?`<details class="nb"${noneOpen?" open":""}><summary><span>بدون سیگنال</span><span>${fa(no.length)} نماد</span></summary>${no.map(noneHtml).join("")}</details>`:"");
 const dt=$("list").querySelector("details");if(dt)dt.addEventListener("toggle",()=>{noneOpen=dt.open});
 $("st").innerHTML=`آخرین اسکن ${time.toLocaleTimeString("fa-IR",{hour:"2-digit",minute:"2-digit",second:"2-digit"})} · ${fa(rows.length)} نماد`+(errs.length?` · <button class="link" id="eb">خطا در ${fa(errs.length)} نماد</button>`:"");$("el").textContent=errs.join(", ");
-const eb=$("eb");if(eb)eb.onclick=()=>$("el").classList.toggle("on")}
+const eb=$("eb");if(eb)eb.onclick=()=>$("el").classList.toggle("on");
+const hk=Object.keys(cnt||{}),bad=hk.filter(m=>cnt[m].ok<cnt[m].n);$("hl").innerHTML=hk.map(m=>`<span class="${cnt[m].ok===cnt[m].n?"ok":cnt[m].ok?"part":"bad"}">${MKT_LABEL[m]} <bdi dir="ltr">${fa(cnt[m].ok)}/${fa(cnt[m].n)}</bdi></span>`).join("")+(bad.some(m=>m!=="crypto"&&cnt[m].ok===0)?'<div class="hint2">منبع این بازارها (Yahoo) جواب نداده؛ معمولاً محدودیت موقت است. اگه ادامه داشت از VPN استفاده کن یا توکن OANDA بذار.</div>':"")}
 $("sum").onclick=e=>{const b=e.target.closest("button");if(!b)return;vf=b.dataset.v;renderList()};
 function beep(){try{const a=new(window.AudioContext||window.webkitAudioContext)(),o=a.createOscillator(),g=a.createGain();o.connect(g);g.connect(a.destination);o.type="sine";g.gain.value=.25;[880,1175,880,1175].forEach((f,i)=>o.frequency.setValueAtTime(f,a.currentTime+i*.18));o.start();o.stop(a.currentTime+.75)}catch(e){}}
 const BL=[];

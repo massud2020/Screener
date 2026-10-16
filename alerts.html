@@ -69,7 +69,7 @@ button.p{background:linear-gradient(120deg,#c98a12,#f2b53b);border:none;color:#1
 <div id="sh"><div class="sheet" id="sheet"></div></div>
 <div class="toast" id="toast"></div>
 <datalist id="syms"></datalist>
-<script src="symbols.js?v=33"></script><script src="alerts.js?v=33"></script><script src="ghsync.js?v=33"></script>
+<script src="symbols.js?v=34"></script><script src="alerts.js?v=34"></script><script src="ghsync.js?v=34"></script>
 <script>
 const $=i=>document.getElementById(i),fa=n=>Number(n).toLocaleString("fa-IR"),LS=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}};
 const DAYS=[[6,"ش"],[0,"ی"],[1,"د"],[2,"س"],[3,"چ"],[4,"پ"],[5,"ج"]],DN={0:"یکشنبه",1:"دوشنبه",2:"سه‌شنبه",3:"چهارشنبه",4:"پنجشنبه",5:"جمعه",6:"شنبه"};
@@ -80,10 +80,10 @@ function toast(m,er){const t=$("toast");t.textContent=m;t.className="toast on"+(
 function load(){try{const c=JSON.parse(LS("bs_alerts")||"null");if(c&&Array.isArray(c.alerts))cfg=c}catch(e){}cfg.tz=LS("bs_altz")||cfg.tz||devTz()}
 function persist(){cfg.tz=($("tz").value||"").trim()||devTz();LS("bs_altz",cfg.tz);LS("bs_alerts",JSON.stringify({tz:cfg.tz,alerts:cfg.alerts}));LS("bs_al_dirty","1");render();autoSync()}
 const money=(a)=>AL.fmt(a.price);
-function descr(a){if(a.type==="time")return`🕘 ارسال قیمت در ساعت‌های <b>${(a.at||[]).join("، ")}</b>`;return`${a.type==="above"?"▲ وقتی قیمت بالاتر یا مساوی":"▼ وقتی قیمت پایین‌تر یا مساوی"} <b>${money(a)}</b> شد`}
-function meta(a){const p=[];if(a.from&&a.to&&a.from!==a.to)p.push(`فقط ${a.from} تا ${a.to}`);const d=a.days||[];if(d.length&&d.length<7)p.push("روزها: "+DAYS.filter(x=>d.includes(x[0])).map(x=>x[1]).join(" "));else p.push("همه‌ی روزها");if(a.type!=="time")p.push(a.repeat==="cool"?`تکرار هر ${fa(a.cool||60)} دقیقه`:"فقط یک‌بار");if(a.note)p.push("«"+a.note+"»");return p.join(" · ")}
+function descr(a){if(a.type==="every")return`⏱ ارسال قیمت <b>هر ${fa(a.every)} دقیقه</b>`;if(a.type==="time")return`🕘 ارسال قیمت در ساعت‌های <b>${(a.at||[]).join("، ")}</b>`;return`${a.type==="above"?"▲ وقتی قیمت بالاتر یا مساوی":"▼ وقتی قیمت پایین‌تر یا مساوی"} <b>${money(a)}</b> شد`}
+function meta(a){const p=[];if(a.from&&a.to&&a.from!==a.to)p.push(`فقط ${a.from} تا ${a.to}`);const d=a.days||[];if(d.length&&d.length<7)p.push("روزها: "+DAYS.filter(x=>d.includes(x[0])).map(x=>x[1]).join(" "));else p.push("همه‌ی روزها");if(a.type==="above"||a.type==="below")p.push(a.repeat==="cool"?`تکرار هر ${fa(a.cool||60)} دقیقه`:"فقط یک‌بار");if(a.note)p.push("«"+a.note+"»");return p.join(" · ")}
 function render(){const n=cfg.alerts.filter(a=>a.on!==false).length;$("cnt").textContent=fa(cfg.alerts.length)+" هشدار"+(cfg.alerts.length?` · ${fa(n)} فعال`:"");
-$("list").innerHTML=cfg.alerts.length?cfg.alerts.map(a=>`<article class="al ${a.type==="above"?"up":a.type==="below"?"dn":"tm"}${a.on===false?" off":""}" data-id="${a.id}"><div class="ah"><div><span class="sym">${a.sym}</span><span class="chip">${a.type==="time"?"زمان‌بندی":a.type==="above"?"بالاتر":"پایین‌تر"}</span></div><input type="checkbox" class="sw" data-t="${a.id}" ${a.on===false?"":"checked"} aria-label="فعال/غیرفعال"></div><div class="ac">${descr(a)}</div><div class="am">${meta(a)}</div><div class="ab"><button data-e="${a.id}">ویرایش</button><button class="del" data-d="${a.id}">حذف</button></div></article>`).join(""):'<div class="empty"><b>🔔</b>هنوز هشداری نساختی.<br>با «هشدار جدید» یه سطح قیمت یا ساعت مشخص تعریف کن.</div>'}
+$("list").innerHTML=cfg.alerts.length?cfg.alerts.map(a=>`<article class="al ${a.type==="above"?"up":a.type==="below"?"dn":"tm"}${a.on===false?" off":""}" data-id="${a.id}"><div class="ah"><div><span class="sym">${a.sym}</span><span class="chip">${a.type==="every"?"دوره‌ای":a.type==="time"?"زمان‌بندی":a.type==="above"?"بالاتر":"پایین‌تر"}</span></div><input type="checkbox" class="sw" data-t="${a.id}" ${a.on===false?"":"checked"} aria-label="فعال/غیرفعال"></div><div class="ac">${descr(a)}</div><div class="am">${meta(a)}</div><div class="ab"><button data-e="${a.id}">ویرایش</button><button class="del" data-d="${a.id}">حذف</button></div></article>`).join(""):'<div class="empty"><b>🔔</b>هنوز هشداری نساختی.<br>با «هشدار جدید» یه سطح قیمت یا ساعت مشخص تعریف کن.</div>'}
 $("list").onclick=e=>{const t=e.target.closest("[data-t]");if(t){const a=cfg.alerts.find(x=>x.id===t.dataset.t);if(a){a.on=t.checked;persist()}return}
 const ed=e.target.closest("[data-e]");if(ed){openForm(cfg.alerts.find(x=>x.id===ed.dataset.e));return}
 const d=e.target.closest("[data-d]");if(d){const i=cfg.alerts.findIndex(x=>x.id===d.dataset.d);if(i>=0&&confirm("این هشدار حذف شود؟")){cfg.alerts.splice(i,1);persist();toast("هشدار حذف شد")}}};
@@ -95,31 +95,40 @@ if(u[1]){try{const j=await J(`https://www.okx.com/api/v5/market/ticker?instId=${
 if(u[4]&&LS("bs_tok")){try{const h=LS("bs_env")==="live"?"api-fxtrade":"api-fxpractice",r=await fetch(`https://${h}.oanda.com/v3/instruments/${u[4]}/candles?granularity=M5&count=2&price=M`,{headers:{Authorization:"Bearer "+LS("bs_tok")}});if(r.ok){const j=await r.json();return+j.candles[j.candles.length-1].mid.c}}catch(e){}}
 if(u[2]){try{const j=await J(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(u[2])}?interval=5m&range=1d`,true);return+j.chart.result[0].meta.regularMarketPrice}catch(e){}}return null}
 /* ---- form ---- */
-function openForm(a){edit=a?JSON.parse(JSON.stringify(a)):{id:"a"+Date.now().toString(36),sym:"",type:"above",price:"",at:[],from:"",to:"",days:[],repeat:"once",cool:60,on:true,note:""};edit._new=!a;draw();$("sh").classList.add("on");document.body.style.overflow="hidden"}
+const EVERY=[1,5,10,15,30,60,120,240];
+function openForm(a){edit=a?JSON.parse(JSON.stringify(a)):{id:"a"+Date.now().toString(36),sym:"",type:"above",price:"",at:[],every:5,from:"",to:"",days:[],repeat:"once",cool:60,on:true,note:""};if(!edit.at)edit.at=[];if(!edit.every)edit.every=5;edit._new=!a;draw();$("sh").classList.add("on");document.body.style.overflow="hidden"}
 function closeForm(){$("sh").classList.remove("on");document.body.style.overflow=""}
-function draw(){const a=edit,time=a.type==="time";
+function draw(){const a=edit,time=a.type==="time",every=a.type==="every",price=!time&&!every;
 $("sheet").innerHTML=`<h2>${a._new?"هشدار جدید":"ویرایش هشدار"}</h2>
 <label class="fld">نماد<input id="fs" list="syms" value="${a.sym}" placeholder="مثلاً BTCUSDT یا EURUSD یا AAPL" autocomplete="off" autocapitalize="characters"></label>
-<div class="seg" id="ft">${[["above","▲ بالاتر از"],["below","▼ پایین‌تر از"],["time","🕘 ساعت مشخص"]].map(([v,t])=>`<button data-v="${v}" class="${a.type===v?"on":""}">${t}</button>`).join("")}</div>
-${time?`<div class="fld">ساعت‌های ارسال قیمت (به وقت منطقه‌ی زمانی)<div class="chips" id="fa">${(a.at||[]).map(t=>`<button class="tm" data-r="${t}">${t}</button>`).join("")}</div><div class="row2" style="margin-top:8px"><input id="fnt" type="time"><button id="fadd" type="button">＋ افزودن ساعت</button></div></div>`:
-`<label class="fld">قیمت هدف<input id="fp" inputmode="decimal" value="${a.price}" placeholder="مثلاً 68000"></label><div class="cur" id="cur"><span>قیمت فعلی: <b id="cv">—</b></span><button id="cgo" type="button">دریافت</button><span id="cq"></span></div>`}
+<div class="seg" id="ft">${[["above","▲ بالاتر"],["below","▼ پایین‌تر"],["every","⏱ دوره‌ای"],["time","🕘 ساعت"]].map(([v,t])=>`<button data-v="${v}" class="${a.type===v?"on":""}">${t}</button>`).join("")}</div>
+${price?`<label class="fld">قیمت هدف<input id="fp" inputmode="decimal" value="${a.price}" placeholder="مثلاً 68000"></label><div class="cur" id="cur"><span>قیمت فعلی: <b id="cv">—</b></span><button id="cgo" type="button">دریافت</button><span id="cq"></span></div>`:""}
+${every?`<div class="fld">هر چند دقیقه قیمت برایم ارسال شود؟<div class="chips" id="fe2">${EVERY.map(n=>`<button data-n="${n}" class="${a.every===n?"on":""}">${n>=60?fa(n/60)+" ساعت":fa(n)+" دقیقه"}</button>`).join("")}</div><div class="row2" style="margin-top:8px"><input id="fev" inputmode="numeric" value="${a.every}" aria-label="دقیقه"><span class="hint" style="align-self:center">دقیقه (۱ تا ۱۴۴۰)</span></div></div><div class="hint" id="warn" style="margin-top:8px"></div>`:""}
+${time?`<div class="fld">ساعت‌های ارسال قیمت (به وقت منطقه‌ی زمانی)<div class="chips" id="fa">${(a.at||[]).map(t=>`<button class="tm" data-r="${t}">${t}</button>`).join("")}</div><div class="row2" style="margin-top:8px"><input id="fnt" type="time"><button id="fadd" type="button">＋ افزودن ساعت</button></div></div>`:""}
 <h3>زمان‌های فعال بودن (اختیاری)</h3>
 ${time?"":`<div class="row2"><label class="fld" style="margin-top:0">از ساعت<input id="ff" type="time" value="${a.from||""}"></label><label class="fld" style="margin-top:0">تا ساعت<input id="fto" type="time" value="${a.to||""}"></label></div>`}
 <div class="fld">روزهای هفته (خالی = همه)<div class="chips" id="fd">${DAYS.map(([v,l])=>`<button data-d="${v}" class="${(a.days||[]).includes(v)?"on":""}" title="${DN[v]}">${l}</button>`).join("")}</div></div>
-${time?"":`<div class="row2"><label class="fld">تکرار<select id="fr"><option value="once" ${a.repeat!=="cool"?"selected":""}>فقط یک‌بار</option><option value="cool" ${a.repeat==="cool"?"selected":""}>تکرار با فاصله</option></select></label><label class="fld">فاصله‌ی تکرار (دقیقه)<input id="fc" inputmode="numeric" value="${a.cool||60}"></label></div>`}
+${price?`<div class="row2"><label class="fld">تکرار<select id="fr"><option value="once" ${a.repeat!=="cool"?"selected":""}>فقط یک‌بار</option><option value="cool" ${a.repeat==="cool"?"selected":""}>تکرار با فاصله</option></select></label><label class="fld">فاصله‌ی تکرار (دقیقه)<input id="fc" inputmode="numeric" value="${a.cool||60}"></label></div>`:""}
 <label class="fld">یادداشت (اختیاری)<textarea id="fn" maxlength="120" placeholder="مثلاً حمایت هفتگی">${(a.note||"").replace(/</g,"&lt;")}</textarea></label>
 <div class="err" id="fe"></div><div class="btns"><button class="p" id="fsave">ذخیره</button><button id="fcancel">انصراف</button></div>`;
-bind()}
-function readForm(){const a=edit;a.sym=($("fs").value||"").trim().toUpperCase();a.note=($("fn").value||"").trim();if(a.type==="time"){a.price=undefined;a.from=a.to=undefined}else{a.price=parseFloat(norm($("fp").value));a.from=$("ff").value||"";a.to=$("fto").value||"";a.repeat=$("fr").value;a.cool=Math.max(1,Math.round(+norm($("fc").value)||60))}}
+bind();warn()}
+function readForm(){const a=edit;a.sym=($("fs").value||"").trim().toUpperCase();a.note=($("fn").value||"").trim();
+if(a.type==="time"){a.price=undefined;a.from=a.to=undefined}
+else{a.from=$("ff")?$("ff").value||"":"";a.to=$("fto")?$("fto").value||"":"";
+if(a.type==="every"){a.price=undefined;a.every=Math.round(+norm($("fev").value))||0}
+else{a.price=parseFloat(norm($("fp").value));a.repeat=$("fr").value;a.cool=Math.max(1,Math.round(+norm($("fc").value)||60))}}}
+function warn(){const w=$("warn");if(!w||edit.type!=="every")return;const n=+norm(($("fev")||{}).value)||edit.every,tmp={every:n,from:($("ff")||{}).value,to:($("fto")||{}).value},d=AL.perDay(tmp);
+w.innerHTML=d>150?`⚠ با این تنظیم حدود <b>${fa(d)}</b> پیام در روز می‌آید. ممکنه سرویس رایگان ntfy.sh سقف روزانه‌ی پیام (حدود ۲۵۰) داشته باشه؛ بازه‌ی ساعتی کوتاه‌تر یا فاصله‌ی بیشتر انتخاب کن.`:`حدود ${fa(d)} پیام در روز`;w.style.color=d>150?"#ffb020":""}
 function bind(){$("fcancel").onclick=closeForm;
-$("ft").onclick=e=>{const b=e.target.closest("button");if(!b)return;readForm();edit.type=b.dataset.v;if(edit.type==="time"&&!edit.at.length)edit.at=[];draw()};
+$("ft").onclick=e=>{const b=e.target.closest("button");if(!b)return;readForm();edit.type=b.dataset.v;draw()};
 $("fd").onclick=e=>{const b=e.target.closest("button");if(!b)return;const v=+b.dataset.d,i=edit.days.indexOf(v);i>=0?edit.days.splice(i,1):edit.days.push(v);b.classList.toggle("on")};
 if(edit.type==="time"){$("fadd").onclick=()=>{const t=$("fnt").value;if(!t)return;if(!edit.at.includes(t))edit.at.push(t);edit.at.sort();readForm();draw()};$("fa").onclick=e=>{const b=e.target.closest("button[data-r]");if(b){edit.at=edit.at.filter(x=>x!==b.dataset.r);readForm();draw()}}}
+else if(edit.type==="every"){$("fe2").onclick=e=>{const b=e.target.closest("button");if(!b)return;$("fev").value=b.dataset.n;[...$("fe2").children].forEach(x=>x.classList.toggle("on",x===b));warn()};$("fev").oninput=()=>{const n=+norm($("fev").value);[...$("fe2").children].forEach(x=>x.classList.toggle("on",+x.dataset.n===n));warn()};["ff","fto"].forEach(i=>$(i).onchange=warn);$("fd").addEventListener("click",warn)}
 else{const upd=async()=>{const s=($("fs").value||"").trim();if(s.length<2){$("cv").textContent="—";return}$("cv").textContent="…";const p=await getPrice(s);if(!$("cv"))return;if(p==null){$("cv").textContent="نامشخص";$("cq").innerHTML="";return}$("cv").textContent=AL.fmt(p);$("cq").innerHTML=[["−2%",.98],["−1%",.99],["+1%",1.01],["+2%",1.02]].map(([l,m])=>`<button type="button" data-m="${m}" data-p="${p}">${l}</button>`).join(" ")};
 $("cgo").onclick=upd;$("cq").onclick=e=>{const b=e.target.closest("button[data-m]");if(b){const v=+b.dataset.p*+b.dataset.m;$("fp").value=String(+v.toPrecision(7))}};$("fs").onchange=upd}
 $("fsave").onclick=()=>{readForm();const a=edit,err=AL.validate(a);if(err){$("fe").textContent=err;return}
-if(a.type==="above"||a.type==="below"){if(a.from&&a.to&&a.from===a.to){a.from=a.to=""}}delete a._new;const clean={id:a.id,sym:a.sym,type:a.type,on:a.on!==false};
-if(a.type==="time")clean.at=a.at;else{clean.price=a.price;clean.repeat=a.repeat;if(a.repeat==="cool")clean.cool=a.cool;if(a.from&&a.to){clean.from=a.from;clean.to=a.to}}
+if(a.from&&a.to&&a.from===a.to){a.from=a.to=""}delete a._new;const clean={id:a.id,sym:a.sym,type:a.type,on:a.on!==false};
+if(a.type==="time")clean.at=a.at;else if(a.type==="every"){clean.every=a.every;if(a.from&&a.to){clean.from=a.from;clean.to=a.to}}else{clean.price=a.price;clean.repeat=a.repeat;if(a.repeat==="cool")clean.cool=a.cool;if(a.from&&a.to){clean.from=a.from;clean.to=a.to}}
 if(a.days&&a.days.length&&a.days.length<7)clean.days=[...a.days].sort();if(a.note)clean.note=a.note;
 const i=cfg.alerts.findIndex(x=>x.id===a.id);i>=0?cfg.alerts[i]=clean:cfg.alerts.push(clean);persist();closeForm();toast("هشدار ذخیره شد ✓")}}
 $("add").onclick=()=>openForm(null);
